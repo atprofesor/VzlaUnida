@@ -16,7 +16,7 @@ TIPO_ACOGIDA_CHOICES = [
 ]
 
 class Huesped(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     
     # Datos de contacto
     telefono = models.CharField(max_length=20) 
