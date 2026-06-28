@@ -1,6 +1,8 @@
+import json
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import HuespedRegistrationForm
+from .models import UBICACIONES
 
 def registrar_huesped(request):
     if request.method == 'POST':
@@ -11,7 +13,17 @@ def registrar_huesped(request):
                 huesped.user = request.user
             huesped.save()
             messages.success(request, "¡Registro exitoso!")
-            return render(request, 'registro_huesped.html', {'form': HuespedRegistrationForm(), 'mensaje': 'Registro exitoso'})
+            # Redirigimos a la misma vista para limpiar el formulario y evitar el Broken pipe
+            return redirect('registrar_huesped') 
+        else:
+            # Opcional: imprimir errores en consola para ayudarte a debuguear si el form no es válido
+            print(form.errors)
     else:
         form = HuespedRegistrationForm()
-    return render(request, 'registro_huesped.html', {'form': form})
+
+    context = {
+        'form': form,
+        'ubicaciones_json': json.dumps(UBICACIONES)
+    }
+    
+    return render(request, 'registro_huesped.html', context)

@@ -1,14 +1,108 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
     <h2 class="text-2xl font-bold mb-6">Registro de Huésped</h2>
-    <form method="post" enctype="multipart/form-data">
+    
+    <form method="post" enctype="multipart/form-data" id="huespedForm">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold mt-4 hover:bg-slate-800">
-            Completar Registro
-        </button>
+        
+        <div class="mb-4">
+            <label class="block font-bold mb-1">Teléfono</label>
+            <div class="flex gap-2">
+                {{ form.prefijo_telefono }}
+                {{ form.numero_telefono }}
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            {{ form.estado.label_tag }}
+            {{ form.estado }}
+        </div>
+
+        <div class="mb-4">
+            {{ form.ciudad.label_tag }}
+            {{ form.ciudad }}
+        </div>
+        
+        <div class="space-y-4">
+            <div class="w-full">
+                <label class="block font-bold mb-1">{{ form.sector.label }}</label>
+                {{ form.sector }}
+            </div>
+
+            <div class="border-b pb-2">
+                <h3 class="text-lg font-bold text-slate-800">Capacidad máxima de albergue</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block font-bold mb-1 text-sm">{{ form.capacidad_ninos.label }}</label>
+                    {{ form.capacidad_ninos }}
+                </div>
+                <div>
+                    <label class="block font-bold mb-1 text-sm">{{ form.capacidad_adultos.label }}</label>
+                    {{ form.capacidad_adultos }}
+                </div>
+                <div>
+                    <label class="block font-bold mb-1 text-sm">{{ form.capacidad_adultos_mayores.label }}</label>
+                    {{ form.capacidad_adultos_mayores }}
+                </div>
+            </div>
+
+            <div class="w-full">
+                <label class="block font-bold mb-2">Acepta Mascotas:</label>
+                <div class="flex flex-wrap gap-4">
+                    <label class="flex items-center">{{ form.acepta_mascotas_pequenas }} <span class="ml-2">Pequeñas</span></label>
+                    <label class="flex items-center">{{ form.acepta_mascotas_medianas }} <span class="ml-2">Medianas</span></label>
+                    <label class="flex items-center">{{ form.acepta_mascotas_grandes }} <span class="ml-2">Grandes</span></label>
+                </div>
+            </div>
+
+            <div class="w-full">
+                <label class="block font-bold mb-1">{{ form.tipo_acogida.label }}</label>
+                {{ form.tipo_acogida }}
+            </div>
+
+            <div class="w-full">
+                <label class="block font-bold mb-1">{{ form.tiempo_disponible_meses.label }}</label>
+                {{ form.tiempo_disponible_meses }}
+            </div>
+
+            <div class="w-full">
+                <label class="block font-bold mb-1">{{ form.cedula_file.label }}</label>
+                {{ form.cedula_file }}
+            </div>
+
+            <div class="w-full">
+                <label class="block font-bold mb-1">{{ form.residencia_file.label }}</label>
+                {{ form.residencia_file }}
+            </div>
+        </div>
+
+        <button type="submit" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold mt-6">Completar Registro</button>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const data = {{ ubicaciones_json|safe }};
+    const estadoSelect = document.querySelector('select[name="estado"]');
+    const ciudadSelect = document.querySelector('select[name="ciudad"]');
+
+    if (estadoSelect && ciudadSelect) {
+        estadoSelect.addEventListener('change', function() {
+            const estado = this.value;
+            ciudadSelect.innerHTML = '<option value="">Seleccione Ciudad</option>';
+            if (estado && data[estado]) {
+                data[estado].forEach(ciudad => {
+                    const option = document.createElement('option');
+                    option.value = ciudad;
+                    option.textContent = ciudad;
+                    ciudadSelect.appendChild(option);
+                });
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
