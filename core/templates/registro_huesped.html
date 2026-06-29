@@ -3,83 +3,215 @@
 <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
     <h2 class="text-2xl font-bold mb-6">Registro de Huésped</h2>
     
+    <!-- MOSTRAR MENSAJES DE ERROR GENERALES -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700 border border-red-400{% elif message.tags == 'success' %}bg-green-100 text-green-700 border border-green-400{% else %}bg-blue-100 text-blue-700 border border-blue-400{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- MOSTRAR ERRORES DEL FORMULARIO -->
+    {% if user_form.errors or huesped_form.errors %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+            <strong>⚠️ Error:</strong> Por favor corrige los siguientes errores:
+            <ul class="list-disc pl-5 mt-2">
+                {% for field, errors in user_form.errors.items %}
+                    <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
+                {% endfor %}
+                {% for field, errors in huesped_form.errors.items %}
+                    <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
+                {% endfor %}
+                {% if user_form.non_field_errors %}
+                    <li><strong>General:</strong> {{ user_form.non_field_errors|join:", " }}</li>
+                {% endif %}
+                {% if huesped_form.non_field_errors %}
+                    <li><strong>General:</strong> {{ huesped_form.non_field_errors|join:", " }}</li>
+                {% endif %}
+            </ul>
+        </div>
+    {% endif %}
+
     <form method="post" enctype="multipart/form-data" id="huespedForm">
         {% csrf_token %}
         
-        <div class="mb-4">
-            <label class="block font-bold mb-1">Teléfono</label>
-            <div class="flex gap-2">
-                {{ form.prefijo_telefono }}
-                {{ form.numero_telefono }}
+        <div class="mb-6 pb-4 border-b">
+            <h3 class="text-lg font-bold text-slate-800 mb-3">Información de Acceso</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-bold mb-1">Nombre de Usuario</label>
+                    {{ user_form.username }}
+                    {% if user_form.username.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ user_form.username.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">Contraseña</label>
+                    {{ user_form.password }}
+                    {% if user_form.password.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ user_form.password.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
-        
-        <div class="mb-4">
-            {{ form.estado.label_tag }}
-            {{ form.estado }}
+
+        <div class="mb-6 pb-4 border-b">
+            <h3 class="text-lg font-bold text-slate-800 mb-3">Datos Personales</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block font-bold mb-1">Nombres</label>
+                    {{ huesped_form.nombres }}
+                    {% if huesped_form.nombres.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.nombres.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">Apellidos</label>
+                    {{ huesped_form.apellidos }}
+                    {% if huesped_form.apellidos.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.apellidos.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- CÉDULA Y TELÉFONO EN LA MISMA FILA -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block font-bold mb-1">Número de Cédula</label>
+                    <div class="flex gap-2">
+                        {{ huesped_form.prefijo_cedula }}
+                        {{ huesped_form.numero_cedula }}
+                    </div>
+                    {% if huesped_form.numero_cedula.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.numero_cedula.errors|join:", " }}</p>
+                    {% endif %}
+                    <p class="text-xs text-slate-500 mt-1">Ejemplo: V-17.936.063</p>
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">Teléfono</label>
+                    <div class="flex gap-2">
+                        {{ huesped_form.prefijo_telefono }}
+                        {{ huesped_form.numero_telefono }}
+                    </div>
+                    {% if huesped_form.numero_telefono.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.numero_telefono.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
-        <div class="mb-4">
-            {{ form.ciudad.label_tag }}
-            {{ form.ciudad }}
-        </div>
-        
         <div class="space-y-4">
+            <!-- ESTADO Y CIUDAD -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-bold mb-1">Estado</label>
+                    {{ huesped_form.estado }}
+                    {% if huesped_form.estado.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.estado.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">Ciudad</label>
+                    {{ huesped_form.ciudad }}
+                    {% if huesped_form.ciudad.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.ciudad.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
             <div class="w-full">
-                <label class="block font-bold mb-1">{{ form.sector.label }}</label>
-                {{ form.sector }}
+                <label class="block font-bold mb-1">{{ huesped_form.sector.label }}</label>
+                {{ huesped_form.sector }}
+                {% if huesped_form.sector.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ huesped_form.sector.errors|join:", " }}</p>
+                {% endif %}
             </div>
 
-            <div class="border-b pb-2">
-                <h3 class="text-lg font-bold text-slate-800">Capacidad máxima de albergue</h3>
+            <div class="border-b pt-4 pb-2">
+                <h3 class="text-lg font-bold text-slate-800">Capacidad máxima</h3>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label class="block font-bold mb-1 text-sm">{{ form.capacidad_ninos.label }}</label>
-                    {{ form.capacidad_ninos }}
+                    <label class="block font-bold mb-1 text-sm">Niños</label>
+                    {{ huesped_form.capacidad_ninos }}
+                    {% if huesped_form.capacidad_ninos.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.capacidad_ninos.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
                 <div>
-                    <label class="block font-bold mb-1 text-sm">{{ form.capacidad_adultos.label }}</label>
-                    {{ form.capacidad_adultos }}
+                    <label class="block font-bold mb-1 text-sm">Adultos</label>
+                    {{ huesped_form.capacidad_adultos }}
+                    {% if huesped_form.capacidad_adultos.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.capacidad_adultos.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
                 <div>
-                    <label class="block font-bold mb-1 text-sm">{{ form.capacidad_adultos_mayores.label }}</label>
-                    {{ form.capacidad_adultos_mayores }}
+                    <label class="block font-bold mb-1 text-sm">Adultos mayores</label>
+                    {{ huesped_form.capacidad_adultos_mayores }}
+                    {% if huesped_form.capacidad_adultos_mayores.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.capacidad_adultos_mayores.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
             </div>
 
             <div class="w-full">
                 <label class="block font-bold mb-2">Acepta Mascotas:</label>
                 <div class="flex flex-wrap gap-4">
-                    <label class="flex items-center">{{ form.acepta_mascotas_pequenas }} <span class="ml-2">Pequeñas</span></label>
-                    <label class="flex items-center">{{ form.acepta_mascotas_medianas }} <span class="ml-2">Medianas</span></label>
-                    <label class="flex items-center">{{ form.acepta_mascotas_grandes }} <span class="ml-2">Grandes</span></label>
+                    <label class="flex items-center">
+                        {{ huesped_form.acepta_mascotas_pequenas }} 
+                        <span class="ml-2">Pequeñas</span>
+                    </label>
+                    <label class="flex items-center">
+                        {{ huesped_form.acepta_mascotas_medianas }} 
+                        <span class="ml-2">Medianas</span>
+                    </label>
+                    <label class="flex items-center">
+                        {{ huesped_form.acepta_mascotas_grandes }} 
+                        <span class="ml-2">Grandes</span>
+                    </label>
                 </div>
             </div>
 
             <div class="w-full">
-                <label class="block font-bold mb-1">{{ form.tipo_acogida.label }}</label>
-                {{ form.tipo_acogida }}
+                <label class="block font-bold mb-1">Tipo de Acogida</label>
+                {{ huesped_form.tipo_acogida }}
+                {% if huesped_form.tipo_acogida.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ huesped_form.tipo_acogida.errors|join:", " }}</p>
+                {% endif %}
             </div>
 
             <div class="w-full">
-                <label class="block font-bold mb-1">{{ form.tiempo_disponible_meses.label }}</label>
-                {{ form.tiempo_disponible_meses }}
+                <label class="block font-bold mb-1">Meses disponibles</label>
+                {{ huesped_form.tiempo_disponible_meses }}
+                {% if huesped_form.tiempo_disponible_meses.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ huesped_form.tiempo_disponible_meses.errors|join:", " }}</p>
+                {% endif %}
             </div>
 
             <div class="w-full">
-                <label class="block font-bold mb-1">{{ form.cedula_file.label }}</label>
-                {{ form.cedula_file }}
+                <label class="block font-bold mb-1">Cédula (Imagen/PDF) *</label>
+                {{ huesped_form.cedula_file }}
+                {% if huesped_form.cedula_file.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ huesped_form.cedula_file.errors|join:", " }}</p>
+                {% endif %}
+                <p class="text-xs text-slate-500 mt-1">Formatos permitidos: JPG, PNG, PDF (máx. 5MB)</p>
             </div>
 
             <div class="w-full">
-                <label class="block font-bold mb-1">{{ form.residencia_file.label }}</label>
-                {{ form.residencia_file }}
+                <label class="block font-bold mb-1">Comprobante Residencia *</label>
+                {{ huesped_form.residencia_file }}
+                {% if huesped_form.residencia_file.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ huesped_form.residencia_file.errors|join:", " }}</p>
+                {% endif %}
+                <p class="text-xs text-slate-500 mt-1">Formatos permitidos: JPG, PNG, PDF (máx. 5MB)</p>
             </div>
         </div>
 
-        <button type="submit" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold mt-6">Completar Registro</button>
+        <button type="submit" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold mt-6 hover:bg-slate-800 transition">
+            Completar Registro
+        </button>
     </form>
 </div>
 
@@ -87,20 +219,77 @@
 document.addEventListener('DOMContentLoaded', function() {
     const data = {{ ubicaciones_json|safe }};
     const estadoSelect = document.querySelector('select[name="estado"]');
-    const ciudadSelect = document.querySelector('select[name="ciudad"]');
+    const ciudadInput = document.querySelector('input[name="ciudad"]');
 
-    if (estadoSelect && ciudadSelect) {
+    if (estadoSelect && ciudadInput) {
         estadoSelect.addEventListener('change', function() {
             const estado = this.value;
-            ciudadSelect.innerHTML = '<option value="">Seleccione Ciudad</option>';
+            // Limpiar el campo de ciudad
+            ciudadInput.value = '';
+            
             if (estado && data[estado]) {
+                // Crear un datalist con las ciudades
+                let datalistId = 'ciudades-list';
+                let datalist = document.getElementById(datalistId);
+                
+                if (!datalist) {
+                    datalist = document.createElement('datalist');
+                    datalist.id = datalistId;
+                    document.body.appendChild(datalist);
+                }
+                
+                // Limpiar y agregar opciones
+                datalist.innerHTML = '';
                 data[estado].forEach(ciudad => {
                     const option = document.createElement('option');
                     option.value = ciudad;
-                    option.textContent = ciudad;
-                    ciudadSelect.appendChild(option);
+                    datalist.appendChild(option);
                 });
+                
+                // Asignar el datalist al input
+                ciudadInput.setAttribute('list', datalistId);
+                ciudadInput.placeholder = 'Selecciona o escribe una ciudad';
+                ciudadInput.removeAttribute('readonly');
+            } else {
+                ciudadInput.removeAttribute('list');
+                ciudadInput.placeholder = 'Selecciona un estado primero';
+                ciudadInput.setAttribute('readonly', 'readonly');
             }
+        });
+
+        // ✅ Si hay un estado seleccionado (cuando el formulario falla), cargar ciudades
+        if (estadoSelect.value) {
+            estadoSelect.dispatchEvent(new Event('change'));
+            // Si hay una ciudad guardada, ponerla
+            const ciudadGuardada = "{{ huesped_form.ciudad.value|default:'' }}";
+            if (ciudadGuardada) {
+                ciudadInput.value = ciudadGuardada;
+            }
+        }
+    }
+
+    // FORMATO AUTOMÁTICO DE CÉDULA CON PUNTOS
+    const cedulaInput = document.getElementById('id_numero_cedula');
+    if (cedulaInput) {
+        cedulaInput.addEventListener('input', function(e) {
+            let valor = this.value.replace(/\D/g, '');
+            
+            if (valor.length > 8) {
+                valor = valor.slice(0, 8);
+            }
+            
+            let formateado = '';
+            if (valor.length > 0) {
+                if (valor.length <= 2) {
+                    formateado = valor;
+                } else if (valor.length <= 5) {
+                    formateado = valor.slice(0, 2) + '.' + valor.slice(2);
+                } else {
+                    formateado = valor.slice(0, 2) + '.' + valor.slice(2, 5) + '.' + valor.slice(5);
+                }
+            }
+            
+            this.value = formateado;
         });
     }
 });

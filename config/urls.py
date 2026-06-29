@@ -18,12 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from core.views import registrar_huesped # Importamos la vista directamente
+from core.views import home_seleccion  # <--- Importar la vista correcta
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', registrar_huesped, name='home'), # <--- ESTO SOLUCIONA EL ERROR
-    path('registro/', include('core.urls')), 
+    path('', home_seleccion, name='home'),  # <--- CORREGIDO
+    path('registro/', include('core.urls')),
 ]
 
 if settings.DEBUG:
