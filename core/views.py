@@ -1,8 +1,9 @@
 import json
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
 from django.db import transaction
 from django.db import models
 from .models import Huesped, Afectado, UBICACIONES
@@ -31,8 +32,9 @@ def registrar_huesped(request):
                 huesped.telefono = f"{huesped_form.cleaned_data['prefijo_telefono']}{huesped_form.cleaned_data['numero_telefono']}"
                 huesped.estado = huesped_form.cleaned_data['estado']
                 huesped.ciudad = huesped_form.cleaned_data['ciudad']
+                huesped.tiempo_disponible_meses = int(huesped_form.cleaned_data['tiempo_disponible_meses'])
                 
-                # ✅ ASIGNAR CÉDULA CON PREFIJO Y NÚMERO
+                # Asignar cédula con prefijo y número
                 huesped.prefijo_cedula = huesped_form.cleaned_data['prefijo_cedula']
                 huesped.numero_cedula = huesped_form.cleaned_data['numero_cedula']
                 
@@ -219,3 +221,49 @@ def buscar_afectados(request):
     except Huesped.DoesNotExist:
         messages.warning(request, 'No tienes un perfil de huésped.')
         return redirect('registrar_huesped')
+
+
+# ✅ VISTAS DE LOGIN Y LOGOUT (CORREGIDAS)
+def login_view(request):
+    """
+    Vista para iniciar sesión.
+    """
+    if request.user.is_authenticated:
+        # Si ya está autenticado, redirigir según corresponda
+        try:
+            Huesped.objects.get(user=request.user)
+            return redirect('dashboard_huesped')
+        except Huesped.DoesNotExist:
+            return redirect('home')
+    
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            
+            # ✅ Verificar si el usuario tiene un perfil de huésped
+            try:
+                # Intentar obtener el perfil de huésped
+                huesped = Huesped.objects.get(user=user)
+                messages.success(request, f'¡Bienvenido de vuelta, {huesped.nombres}!')
+                return redirect('dashboard_huesped')
+            except Huesped.DoesNotExist:
+                # Si no tiene perfil de huésped, ir al home
+                messages.success(request, f'¡Bienvenido, {user.username}!')
+                return redirect('home')
+        else:
+            messages.error(request, 'Usuario o contraseña incorrectos.')
+    else:
+        form = AuthenticationForm()
+    
+    return render(request, 'registration/login.html', {'form': form})
+
+
+def logout_view(request):
+    """
+    Vista para cerrar sesión.
+    """
+    logout(request)
+    messages.success(request, 'Has cerrado sesión correctamente.')
+    return redirect('home')

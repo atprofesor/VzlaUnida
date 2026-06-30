@@ -102,7 +102,7 @@
         </div>
 
         <div class="space-y-4">
-            <!-- ESTADO Y CIUDAD -->
+            <!-- ESTADO Y CIUDAD COMO DROPDOWNS -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block font-bold mb-1">Estado</label>
@@ -219,56 +219,51 @@
 document.addEventListener('DOMContentLoaded', function() {
     const data = {{ ubicaciones_json|safe }};
     const estadoSelect = document.querySelector('select[name="estado"]');
-    const ciudadInput = document.querySelector('input[name="ciudad"]');
+    const ciudadSelect = document.querySelector('select[name="ciudad"]');
 
-    if (estadoSelect && ciudadInput) {
+    // ✅ FUNCIÓN PARA ACTUALIZAR CIUDADES EN EL DROPDOWN
+    function actualizarCiudades(estadoSeleccionado) {
+        // Limpiar el select de ciudades
+        ciudadSelect.innerHTML = '';
+        
+        // Opción por defecto
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Seleccione Ciudad';
+        ciudadSelect.appendChild(defaultOption);
+        
+        // Si hay estado seleccionado y tiene ciudades, agregarlas
+        if (estadoSeleccionado && data[estadoSeleccionado]) {
+            data[estadoSeleccionado].forEach(ciudad => {
+                const option = document.createElement('option');
+                option.value = ciudad;
+                option.textContent = ciudad;
+                ciudadSelect.appendChild(option);
+            });
+        }
+    }
+
+    if (estadoSelect && ciudadSelect) {
+        // ✅ Evento cuando cambia el estado
         estadoSelect.addEventListener('change', function() {
             const estado = this.value;
-            // Limpiar el campo de ciudad
-            ciudadInput.value = '';
-            
-            if (estado && data[estado]) {
-                // Crear un datalist con las ciudades
-                let datalistId = 'ciudades-list';
-                let datalist = document.getElementById(datalistId);
-                
-                if (!datalist) {
-                    datalist = document.createElement('datalist');
-                    datalist.id = datalistId;
-                    document.body.appendChild(datalist);
-                }
-                
-                // Limpiar y agregar opciones
-                datalist.innerHTML = '';
-                data[estado].forEach(ciudad => {
-                    const option = document.createElement('option');
-                    option.value = ciudad;
-                    datalist.appendChild(option);
-                });
-                
-                // Asignar el datalist al input
-                ciudadInput.setAttribute('list', datalistId);
-                ciudadInput.placeholder = 'Selecciona o escribe una ciudad';
-                ciudadInput.removeAttribute('readonly');
-            } else {
-                ciudadInput.removeAttribute('list');
-                ciudadInput.placeholder = 'Selecciona un estado primero';
-                ciudadInput.setAttribute('readonly', 'readonly');
-            }
+            actualizarCiudades(estado);
         });
 
         // ✅ Si hay un estado seleccionado (cuando el formulario falla), cargar ciudades
-        if (estadoSelect.value) {
-            estadoSelect.dispatchEvent(new Event('change'));
-            // Si hay una ciudad guardada, ponerla
+        const estadoSeleccionado = estadoSelect.value;
+        if (estadoSeleccionado) {
+            actualizarCiudades(estadoSeleccionado);
+            
+            // ✅ Si hay una ciudad guardada, seleccionarla
             const ciudadGuardada = "{{ huesped_form.ciudad.value|default:'' }}";
             if (ciudadGuardada) {
-                ciudadInput.value = ciudadGuardada;
+                ciudadSelect.value = ciudadGuardada;
             }
         }
     }
 
-    // FORMATO AUTOMÁTICO DE CÉDULA CON PUNTOS
+    // ✅ FORMATO AUTOMÁTICO DE CÉDULA CON PUNTOS
     const cedulaInput = document.getElementById('id_numero_cedula');
     if (cedulaInput) {
         cedulaInput.addEventListener('input', function(e) {

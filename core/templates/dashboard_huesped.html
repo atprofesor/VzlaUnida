@@ -1,10 +1,18 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-slate-900">Mi Dashboard</h1>
+        <a href="{% url 'home' %}" class="text-sm bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 transition">
+            ← Volver al Inicio
+        </a>
+    </div>
+
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6">
         <h2 class="text-2xl font-bold">Bienvenido, {{ huesped.nombres }} {{ huesped.apellidos }}</h2>
         <p class="text-slate-600 mt-2">Cédula: <strong>{{ huesped.cedula_completa }}</strong></p>
         <p class="text-slate-600">Capacidad total: <strong>{{ capacidad_total }} personas</strong></p>
+        <p class="text-slate-600">Disponibilidad: <strong>{{ huesped.tiempo_disponible_meses }} meses</strong></p>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <div class="bg-slate-50 p-3 rounded-lg">
@@ -20,6 +28,19 @@
                 <p class="font-bold">{{ huesped.tipo_acogida }}</p>
             </div>
         </div>
+        
+        <div class="mt-4 p-3 bg-slate-50 rounded-lg">
+            <span class="text-sm text-slate-500">Estado de verificación</span>
+            <p class="font-bold">
+                {% if huesped.estado_verificacion == 'aprobado' %}
+                    <span class="text-green-600">✅ Aprobado</span>
+                {% elif huesped.estado_verificacion == 'rechazado' %}
+                    <span class="text-red-600">❌ Rechazado</span>
+                {% else %}
+                    <span class="text-yellow-600">⏳ Pendiente</span>
+                {% endif %}
+            </p>
+        </div>
     </div>
 
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
@@ -27,9 +48,12 @@
         {% if afectados_cercanos %}
             <ul class="space-y-3">
                 {% for afectado in afectados_cercanos %}
-                <li class="p-3 bg-slate-50 rounded-lg">
-                    <p class="font-bold">{{ afectado.nombre_completo }}</p>
-                    <p class="text-sm text-slate-500">{{ afectado.ciudad }}, {{ afectado.estado }}</p>
+                <li class="p-3 bg-slate-50 rounded-lg flex justify-between items-center">
+                    <div>
+                        <p class="font-bold">{{ afectado.nombre_completo }}</p>
+                        <p class="text-sm text-slate-500">{{ afectado.ciudad }}, {{ afectado.estado }}</p>
+                    </div>
+                    <span class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">Disponible</span>
                 </li>
                 {% endfor %}
             </ul>

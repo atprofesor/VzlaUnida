@@ -2,7 +2,6 @@ from django import forms
 from django.contrib.auth.models import User
 from .models import Huesped, UBICACIONES, TIPO_ACOGIDA_CHOICES
 import os
-import re
 
 class RegistroUsuarioForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}))
@@ -13,7 +12,7 @@ class RegistroUsuarioForm(forms.ModelForm):
         widgets = {'username': forms.TextInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})}
 
 class HuespedRegistrationForm(forms.ModelForm):
-    # CÉDULA CON PREFIJO - SOLO "V" Y "E"
+    # CÉDULA CON PREFIJO
     prefijo_cedula = forms.ChoiceField(
         choices=[('V', 'V'), ('E', 'E')],
         widget=forms.Select(attrs={'class': 'p-2 border rounded-lg bg-slate-50'})
@@ -41,15 +40,15 @@ class HuespedRegistrationForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
     )
     
-    # ✅ CAMBIADO: De ChoiceField a CharField para evitar validación
-    ciudad = forms.CharField(
-        max_length=100,
-        widget=forms.TextInput(attrs={
-            'class': 'w-full p-2 border rounded-lg bg-slate-50',
-            'id': 'id_ciudad',
-            'readonly': 'readonly',  # ✅ Hace que sea solo lectura
-            'placeholder': 'Selecciona un estado primero'
-        })
+    ciudad = forms.ChoiceField(
+        choices=[('', 'Seleccione Ciudad')],
+        widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
+    )
+
+    # ✅ CAMPO MESES COMO LISTA DESPLEGABLE
+    tiempo_disponible_meses = forms.ChoiceField(
+        choices=[(1, '1 mes'), (3, '3 meses'), (6, '6 meses'), (9, '9 meses'), (12, '12 meses')],
+        widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
     )
 
     class Meta:
@@ -63,7 +62,6 @@ class HuespedRegistrationForm(forms.ModelForm):
             'capacidad_adultos': forms.NumberInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
             'capacidad_adultos_mayores': forms.NumberInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
             'tipo_acogida': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
-            'tiempo_disponible_meses': forms.NumberInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
         }
 
     # ✅ VALIDACIÓN DE CÉDULA
@@ -115,3 +113,13 @@ class HuespedRegistrationForm(forms.ModelForm):
             raise forms.ValidationError("El archivo no debe superar los 5MB.")
         
         return file
+
+    # ✅ INICIALIZAR EL FORMULARIO PARA ACTUALIZAR CHOICES DE CIUDAD
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Si hay un estado seleccionado, actualizar las opciones de ciudad
+        estado_seleccionado = self.initial.get('estado') or self.data.get('estado')
+        if estado_seleccionado and estado_seleccionado in UBICACIONES:
+            ciudades = UBICACIONES[estado_seleccionado]
+            self.fields['ciudad'].choices = [('', 'Seleccione Ciudad')] + [(c, c) for c in ciudades]
