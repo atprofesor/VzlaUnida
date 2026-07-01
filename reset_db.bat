@@ -22,4 +22,4 @@ python manage.py createsuperuser
 echo ¡Listo! Ejecuta 'python manage.py runserver' para iniciar.
 pause
 
-REM ejecuta D:\VzlaUnida>.\reset_db.bat"
+REM ejecuta D:\VzlaUnida>.\reset_db.bat
