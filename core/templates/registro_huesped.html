@@ -36,6 +36,7 @@
     <form method="post" enctype="multipart/form-data" id="huespedForm">
         {% csrf_token %}
         
+        <!-- ✅ SECCIÓN: INFORMACIÓN DE ACCESO (CON EMAIL) -->
         <div class="mb-6 pb-4 border-b">
             <h3 class="text-lg font-bold text-slate-800 mb-3">Información de Acceso</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -46,6 +47,17 @@
                         <p class="text-red-600 text-sm mt-1">{{ user_form.username.errors|join:", " }}</p>
                     {% endif %}
                 </div>
+                <!-- ✅ CAMPO EMAIL (NUEVO) -->
+                <div>
+                    <label class="block font-bold mb-1">Correo Electrónico</label>
+                    {{ user_form.email }}
+                    {% if user_form.email.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ user_form.email.errors|join:", " }}</p>
+                    {% endif %}
+                    <p class="text-xs text-slate-500 mt-1">Recibirás notificaciones de verificación en este correo</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
                     <label class="block font-bold mb-1">Contraseña</label>
                     {{ user_form.password }}
@@ -56,6 +68,7 @@
             </div>
         </div>
 
+        <!-- ✅ SECCIÓN: DATOS PERSONALES -->
         <div class="mb-6 pb-4 border-b">
             <h3 class="text-lg font-bold text-slate-800 mb-3">Datos Personales</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -101,8 +114,8 @@
             </div>
         </div>
 
+        <!-- ✅ SECCIÓN: UBICACIÓN -->
         <div class="space-y-4">
-            <!-- ESTADO Y CIUDAD COMO DROPDOWNS -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block font-bold mb-1">Estado</label>
@@ -128,6 +141,7 @@
                 {% endif %}
             </div>
 
+            <!-- ✅ SECCIÓN: CAPACIDAD MÁXIMA -->
             <div class="border-b pt-4 pb-2">
                 <h3 class="text-lg font-bold text-slate-800">Capacidad máxima</h3>
             </div>
@@ -156,6 +170,7 @@
                 </div>
             </div>
 
+            <!-- ✅ SECCIÓN: MASCOTAS -->
             <div class="w-full">
                 <label class="block font-bold mb-2">Acepta Mascotas:</label>
                 <div class="flex flex-wrap gap-4">
@@ -174,6 +189,7 @@
                 </div>
             </div>
 
+            <!-- ✅ SECCIÓN: CONFIGURACIÓN DE ACOGIDA -->
             <div class="w-full">
                 <label class="block font-bold mb-1">Tipo de Acogida</label>
                 {{ huesped_form.tipo_acogida }}
@@ -190,6 +206,7 @@
                 {% endif %}
             </div>
 
+            <!-- ✅ SECCIÓN: DOCUMENTOS -->
             <div class="w-full">
                 <label class="block font-bold mb-1">Cédula (Imagen/PDF) *</label>
                 {{ huesped_form.cedula_file }}

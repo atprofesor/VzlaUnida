@@ -121,3 +121,30 @@ STATIC_URL = 'static/'
 import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# ... configuración existente ...
+
+# ✅ CONFIGURACIÓN DE EMAIL PARA NOTIFICACIONES
+# Para desarrollo (usando consola)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Para producción (descomenta y configura):
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'tu-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'tu-contraseña'
+# DEFAULT_FROM_EMAIL = 'VzlaUnida <noreply@vzlaunida.com>'
+
+# ✅ SI USAS GMAIL (opcional - recomendado para pruebas)
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'tu-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'tu-contraseña-de-aplicacion'  # Usar contraseña de aplicación
+# DEFAULT_FROM_EMAIL = 'VzlaUnida <tu-email@gmail.com>'
+
+# Si no quieres enviar correos en desarrollo, usa:
+# EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'

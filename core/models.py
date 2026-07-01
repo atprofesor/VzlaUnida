@@ -1,5 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+# ✅ ESTADOS DE VERIFICACIÓN
+ESTADO_VERIFICACION_CHOICES = [
+    ('pendiente', '⏳ Pendiente de revisión'),
+    ('en_revision', '🔍 En revisión'),
+    ('aprobado', '✅ Aprobado'),
+    ('rechazado', '❌ Rechazado'),
+    ('requiere_correccion', '📝 Requiere corrección'),
+]
 
 # ✅ TODOS LOS ESTADOS DE VENEZUELA CON CIUDADES AMPLIADAS
 UBICACIONES = {
@@ -158,7 +168,27 @@ class Huesped(models.Model):
     tiempo_disponible_meses = models.IntegerField(default=1)
     cedula_file = models.FileField(upload_to='documentos/cedulas/', blank=False)
     residencia_file = models.FileField(upload_to='documentos/residencia/', blank=False)
-    estado_verificacion = models.CharField(max_length=20, default='pendiente')
+    estado_verificacion = models.CharField(
+        max_length=20, 
+        choices=ESTADO_VERIFICACION_CHOICES, 
+        default='pendiente'
+    )
+    comentario_verificacion = models.TextField(
+        blank=True, 
+        null=True,
+        help_text="Comentario del administrador sobre la verificación"
+    )
+    fecha_verificacion = models.DateTimeField(
+        blank=True, 
+        null=True,
+        help_text="Fecha en que se realizó la verificación"
+    )
+
+    class Meta:
+        # ✅ RESTRICCIÓN: Cédula única (prefijo + número)
+        unique_together = ['prefijo_cedula', 'numero_cedula']
+        verbose_name = 'Huésped'
+        verbose_name_plural = 'Huéspedes'
 
     def capacidad_total(self):
         """Calcula la capacidad total de personas que puede albergar"""
@@ -167,6 +197,18 @@ class Huesped(models.Model):
     def cedula_completa(self):
         """Retorna la cédula completa con prefijo y número"""
         return f"{self.prefijo_cedula}-{self.numero_cedula}"
+    
+    def is_verified(self):
+        """Verifica si el huésped está aprobado"""
+        return self.estado_verificacion == 'aprobado'
+    
+    def is_pending(self):
+        """Verifica si el huésped está pendiente"""
+        return self.estado_verificacion == 'pendiente'
+    
+    def get_estado_display(self):
+        """Retorna el estado de verificación con emoji"""
+        return dict(ESTADO_VERIFICACION_CHOICES).get(self.estado_verificacion, self.estado_verificacion)
     
     def __str__(self):
         return f"{self.nombres} {self.apellidos} ({self.cedula_completa()})"

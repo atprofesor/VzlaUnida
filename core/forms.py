@@ -4,12 +4,31 @@ from .models import Huesped, UBICACIONES, TIPO_ACOGIDA_CHOICES
 import os
 
 class RegistroUsuarioForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}))
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'w-full p-2 border rounded-lg bg-slate-50',
+            'placeholder': 'tu@email.com'
+        }),
+        required=True,
+        help_text="Obligatorio para recibir notificaciones de verificación"
+    )
     
     class Meta:
         model = User
-        fields = ['username', 'password']
-        widgets = {'username': forms.TextInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})}
+        fields = ['username', 'email', 'password']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Este correo electrónico ya está registrado.")
+        return email
+
 
 class HuespedRegistrationForm(forms.ModelForm):
     # CÉDULA CON PREFIJO
@@ -45,7 +64,7 @@ class HuespedRegistrationForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
     )
 
-    # ✅ CAMPO MESES COMO LISTA DESPLEGABLE
+    # CAMPO MESES COMO LISTA DESPLEGABLE
     tiempo_disponible_meses = forms.ChoiceField(
         choices=[(1, '1 mes'), (3, '3 meses'), (6, '6 meses'), (9, '9 meses'), (12, '12 meses')],
         widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
@@ -83,6 +102,56 @@ class HuespedRegistrationForm(forms.ModelForm):
             formateado = numero_limpio
         
         return formateado
+
+    # ✅ VALIDACIÓN DE CÉDULA ÚNICA (SIN ERROR DUPLICADO)
+    def clean(self):
+        cleaned_data = super().clean()
+        prefijo = cleaned_data.get('prefijo_cedula')
+        numero = cleaned_data.get('numero_cedula')
+        
+        # Verificar si ya existe un huésped con esta cédula
+        if prefijo and numero:
+            # Limpiar el número de puntos para la búsqueda
+            numero_limpio = numero.replace('.', '')
+            
+            # Buscar huéspedes con el mismo prefijo y número (sin puntos)
+            existe = Huesped.objects.filter(
+                prefijo_cedula=prefijo,
+                numero_cedula=numero_limpio
+            ).exists()
+            
+            # Si no encuentra con el número limpio, intentar con el número con puntos
+            if not existe:
+                existe = Huesped.objects.filter(
+                    prefijo_cedula=prefijo,
+                    numero_cedula=numero
+                ).exists()
+            
+            if existe:
+                # ✅ USAR add_error en lugar de ValidationError para evitar duplicados
+                self.add_error(
+                    'numero_cedula',
+                    f"Ya existe un huésped registrado con la cédula {prefijo}-{numero}. "
+                    "Si eres tú, inicia sesión en tu cuenta."
+                )
+                return cleaned_data  # Salir temprano
+        
+        # Validación de ciudad
+        estado = cleaned_data.get('estado')
+        ciudad = cleaned_data.get('ciudad')
+        
+        if estado and ciudad:
+            if estado not in UBICACIONES:
+                self.add_error('estado', "Estado no válido.")
+                return cleaned_data
+            if ciudad not in UBICACIONES.get(estado, []):
+                self.add_error(
+                    'ciudad',
+                    f"La ciudad '{ciudad}' no pertenece al estado '{estado}'. "
+                    f"Ciudades disponibles: {', '.join(UBICACIONES.get(estado, []))}"
+                )
+        
+        return cleaned_data
 
     # ✅ VALIDACIÓN DE ARCHIVO CÉDULA
     def clean_cedula_file(self):
