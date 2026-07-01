@@ -1,32 +1,119 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="min-h-[80vh] flex items-center justify-center bg-slate-50">
-    <div class="text-center p-8 bg-white rounded-2xl shadow-md border border-slate-200 max-w-2xl w-full">
-        <h1 class="text-3xl font-bold mb-8 text-slate-900">¿Cómo deseas registrarte?</h1>
-        
-        {% if messages %}
-            {% for message in messages %}
-                <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700 border border-red-400{% elif message.tags == 'success' %}bg-green-100 text-green-700 border border-green-400{% else %}bg-blue-100 text-blue-700 border border-blue-400{% endif %}">
-                    {{ message }}
+<!-- ✅ Fondo más oscuro para mejor contraste -->
+<div class="min-h-[75vh] flex flex-col items-center justify-center gap-3 py-2 bg-gradient-to-b from-gray-100 to-gray-200">
+    <!-- ✅ TÍTULO PRINCIPAL -->
+    <div class="text-center">
+        <h2 class="text-2xl font-bold text-gray-800">
+            ¿Cómo deseas registrarte?
+        </h2>
+        <p class="text-gray-600 text-sm">
+            Elige tu rol y comienza a formar parte de la red de apoyo
+        </p>
+    </div>
+
+    <!-- ✅ MENSAJES DE ALERTA -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} py-1.5 px-3 text-xs max-w-2xl w-full shadow-sm">
+                <span class="alert-icon text-sm">{% if message.tags == 'error' %}❌{% elif message.tags == 'success' %}✅{% elif message.tags == 'warning' %}⚠️{% else %}ℹ️{% endif %}</span>
+                <div class="alert-content">
+                    <p>{{ message }}</p>
                 </div>
-            {% endfor %}
-        {% endif %}
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <a href="{% url 'registrar_huesped' %}" class="p-6 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition">
-                <h2 class="text-xl font-bold">Soy Huésped</h2>
-                <p class="text-sm opacity-80 mt-2">Tengo disponibilidad para albergar</p>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- ✅ TARJETAS CON BORDES Y SOMBRAS MEJORADAS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+        <!-- Huésped -->
+        <a href="{% url 'registrar_huesped' %}" class="group relative overflow-hidden bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all hover:-translate-y-1 p-6 text-center border-2 border-gray-200 hover:border-primary">
+            <!-- Efecto de brillo al pasar el mouse -->
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+            
+            <div class="relative z-10">
+                <div class="text-4xl mb-2 group-hover:scale-110 transition-transform">🏠</div>
+                <h3 class="text-lg font-bold text-gray-800">Soy Huésped</h3>
+                <p class="text-sm text-gray-500 mt-1">
+                    Tengo disponibilidad para albergar
+                </p>
+                <div class="mt-2 text-sm text-primary font-semibold group-hover:text-primary-dark transition-colors">
+                    Ofrezco ayuda →
+                </div>
+            </div>
+            <!-- Borde inferior con bandera -->
+            <div class="absolute bottom-0 left-0 right-0 h-1.5" style="background: linear-gradient(90deg, #FFD100 33%, #001F5C 33%, #001F5C 66%, #CF202F 66%);"></div>
+        </a>
+
+        <!-- Afectado -->
+        <a href="#" class="group relative overflow-hidden bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all hover:-translate-y-1 p-6 text-center border-2 border-gray-200 hover:border-secondary">
+            <!-- Efecto de brillo al pasar el mouse -->
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+            
+            <div class="relative z-10">
+                <div class="text-4xl mb-2 group-hover:scale-110 transition-transform">🆘</div>
+                <h3 class="text-lg font-bold text-gray-800">Soy Afectado</h3>
+                <p class="text-sm text-gray-500 mt-1">
+                    Busco un lugar seguro para mi familia
+                </p>
+                <div class="mt-2 text-sm text-primary font-semibold group-hover:text-primary-dark transition-colors">
+                    Necesito ayuda →
+                </div>
+            </div>
+            <!-- Borde inferior con bandera -->
+            <div class="absolute bottom-0 left-0 right-0 h-1.5" style="background: linear-gradient(90deg, #FFD100 33%, #001F5C 33%, #001F5C 66%, #CF202F 66%);"></div>
+        </a>
+    </div>
+
+    <!-- ✅ ENLACE PARA USUARIOS REGISTRADOS -->
+    <div class="text-center">
+        <p class="text-sm text-gray-600">
+            ¿Ya tienes una cuenta? 
+            <a href="{% url 'login' %}" class="text-primary font-bold hover:underline transition-colors hover:text-primary-dark">
+                Inicia Sesión aquí
             </a>
-            <a href="#" class="p-6 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
-                <h2 class="text-xl font-bold">Soy Afectado</h2>
-                <p class="text-sm opacity-80 mt-2">Busco un lugar de acogida</p>
+        </p>
+    </div>
+
+    <!-- ✅ BANNER INFERIOR DE LA BANDERA -->
+    <div class="w-full max-w-2xl" style="background: linear-gradient(90deg, #FFD100 0%, #FFD100 33%, #001F5C 33%, #001F5C 66%, #CF202F 66%, #CF202F 100%); height: 5px; border-radius: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>
+
+    <!-- ✅ SECCIÓN DE INFORMACIÓN -->
+    <div class="w-full max-w-2xl text-center space-y-1.5">
+        <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
+            Hecho con ❤️ para el soporte humanitario en Venezuela
+        </p>
+
+        <p class="text-[10px] text-gray-500 leading-relaxed max-w-xl mx-auto">
+            Plataforma dedicada a facilitar el reencuentro familiar en situaciones de emergencia. 
+            Cumplimos con los lineamientos internacionales de protección de identidad.
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-2 text-[10px]">
+            <a href="#" class="text-gray-500 hover:text-primary transition-colors flex items-center gap-1 hover:underline">
+                <span>📸</span> @Venezuelaunida
+            </a>
+            <span class="text-gray-300 hidden sm:inline">|</span>
+            <a href="#" class="text-gray-500 hover:text-primary transition-colors flex items-center gap-1 hover:underline">
+                <span>🎵</span> @venezuelaunida
+            </a>
+            <span class="text-gray-300 hidden sm:inline">|</span>
+            <a href="mailto:info@vzlaunida.com" class="text-gray-500 hover:text-primary transition-colors flex items-center gap-1 hover:underline">
+                <span>✉️</span> info@vzlaunida.com
             </a>
         </div>
-        
-        <div class="mt-8 pt-6 border-t border-slate-200">
-            <p class="text-sm text-slate-500">
-                ¿Ya tienes una cuenta? 
-                <a href="{% url 'login' %}" class="text-slate-900 font-bold hover:underline">Inicia Sesión aquí</a>
+
+        <!-- Footer final -->
+        <div class="flex flex-col items-center pt-1 border-t border-gray-200">
+            <div class="flex gap-1">
+                <span class="w-3 h-3 rounded-full shadow-sm" style="background: #FFD100;"></span>
+                <span class="w-3 h-3 rounded-full shadow-sm" style="background: #001F5C;"></span>
+                <span class="w-3 h-3 rounded-full shadow-sm" style="background: #CF202F;"></span>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-0.5">
+                🇻🇪 Unidos por Venezuela — VzlaUnida
             </p>
         </div>
     </div>

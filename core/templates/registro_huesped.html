@@ -1,233 +1,281 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-    <h2 class="text-2xl font-bold mb-6">Registro de Huésped</h2>
-    
-    <!-- MOSTRAR MENSAJES DE ERROR GENERALES -->
+<div class="max-w-2xl mx-auto">
+    <!-- ✅ Encabezado con steps -->
+    <div class="mb-6">
+        <h2 class="text-2xl font-extrabold text-primary flex items-center gap-2">
+            <span class="text-3xl">📝</span> Registro de Huésped
+        </h2>
+        <p class="text-gray-500 mt-1">Completa todos los campos para registrarte como huésped</p>
+        
+        <!-- ✅ Indicador de pasos -->
+        <div class="steps mt-4">
+            <div class="step active">
+                <span class="step-number">1</span>
+                <span>Datos de acceso</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <span>Datos personales</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step">
+                <span class="step-number">3</span>
+                <span>Documentación</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Mensajes de error -->
     {% if messages %}
         {% for message in messages %}
-            <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700 border border-red-400{% elif message.tags == 'success' %}bg-green-100 text-green-700 border border-green-400{% else %}bg-blue-100 text-blue-700 border border-blue-400{% endif %}">
-                {{ message }}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} mb-4">
+                <span class="alert-icon">
+                    {% if message.tags == 'error' %}❌
+                    {% elif message.tags == 'success' %}✅
+                    {% else %}ℹ️{% endif %}
+                </span>
+                <div class="alert-content">
+                    <p>{{ message }}</p>
+                </div>
             </div>
         {% endfor %}
     {% endif %}
 
-    <!-- MOSTRAR ERRORES DEL FORMULARIO -->
+    <!-- ✅ Errores del formulario -->
     {% if user_form.errors or huesped_form.errors %}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
-            <strong>⚠️ Error:</strong> Por favor corrige los siguientes errores:
-            <ul class="list-disc pl-5 mt-2">
-                {% for field, errors in user_form.errors.items %}
-                    <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
-                {% endfor %}
-                {% for field, errors in huesped_form.errors.items %}
-                    <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
-                {% endfor %}
-                {% if user_form.non_field_errors %}
-                    <li><strong>General:</strong> {{ user_form.non_field_errors|join:", " }}</li>
-                {% endif %}
-                {% if huesped_form.non_field_errors %}
-                    <li><strong>General:</strong> {{ huesped_form.non_field_errors|join:", " }}</li>
-                {% endif %}
-            </ul>
+        <div class="alert alert-danger mb-6">
+            <span class="alert-icon">⚠️</span>
+            <div class="alert-content">
+                <div class="alert-title">Por favor corrige los siguientes errores:</div>
+                <ul class="list-disc pl-5 mt-2 space-y-1">
+                    {% for field, errors in user_form.errors.items %}
+                        <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
+                    {% endfor %}
+                    {% for field, errors in huesped_form.errors.items %}
+                        <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
+                    {% endfor %}
+                    {% if user_form.non_field_errors %}
+                        <li><strong>General:</strong> {{ user_form.non_field_errors|join:", " }}</li>
+                    {% endif %}
+                    {% if huesped_form.non_field_errors %}
+                        <li><strong>General:</strong> {{ huesped_form.non_field_errors|join:", " }}</li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data" id="huespedForm">
+    <!-- ✅ Formulario -->
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
         {% csrf_token %}
         
-        <!-- ✅ SECCIÓN: INFORMACIÓN DE ACCESO (CON EMAIL) -->
-        <div class="mb-6 pb-4 border-b">
-            <h3 class="text-lg font-bold text-slate-800 mb-3">Información de Acceso</h3>
+        <!-- ==================== PASO 1: DATOS DE ACCESO ==================== -->
+        <div class="card card-primary">
+            <h3 class="text-lg font-bold text-primary flex items-center gap-2 mb-4">
+                <span class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs">1</span>
+                Información de Acceso
+            </h3>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block font-bold mb-1">Nombre de Usuario</label>
+                <div class="input-group">
+                    <label for="{{ user_form.username.id_for_label }}">Nombre de Usuario</label>
                     {{ user_form.username }}
                     {% if user_form.username.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ user_form.username.errors|join:", " }}</p>
+                        <p class="error-text">{{ user_form.username.errors|join:", " }}</p>
                     {% endif %}
                 </div>
-                <!-- ✅ CAMPO EMAIL (NUEVO) -->
-                <div>
-                    <label class="block font-bold mb-1">Correo Electrónico</label>
+                <div class="input-group">
+                    <label for="{{ user_form.email.id_for_label }}">Correo Electrónico</label>
                     {{ user_form.email }}
                     {% if user_form.email.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ user_form.email.errors|join:", " }}</p>
+                        <p class="error-text">{{ user_form.email.errors|join:", " }}</p>
                     {% endif %}
-                    <p class="text-xs text-slate-500 mt-1">Recibirás notificaciones de verificación en este correo</p>
+                    <p class="help-text">Recibirás notificaciones de verificación</p>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                    <label class="block font-bold mb-1">Contraseña</label>
-                    {{ user_form.password }}
-                    {% if user_form.password.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ user_form.password.errors|join:", " }}</p>
-                    {% endif %}
-                </div>
+            <div class="input-group">
+                <label for="{{ user_form.password.id_for_label }}">Contraseña</label>
+                {{ user_form.password }}
+                {% if user_form.password.errors %}
+                    <p class="error-text">{{ user_form.password.errors|join:", " }}</p>
+                {% endif %}
             </div>
         </div>
 
-        <!-- ✅ SECCIÓN: DATOS PERSONALES -->
-        <div class="mb-6 pb-4 border-b">
-            <h3 class="text-lg font-bold text-slate-800 mb-3">Datos Personales</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block font-bold mb-1">Nombres</label>
+        <!-- ==================== PASO 2: DATOS PERSONALES ==================== -->
+        <div class="card card-accent">
+            <h3 class="text-lg font-bold text-primary flex items-center gap-2 mb-4">
+                <span class="w-6 h-6 rounded-full bg-secondary text-gray-900 flex items-center justify-center text-xs font-bold">2</span>
+                Datos Personales
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="input-group">
+                    <label for="{{ huesped_form.nombres.id_for_label }}">Nombres</label>
                     {{ huesped_form.nombres }}
                     {% if huesped_form.nombres.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.nombres.errors|join:", " }}</p>
+                        <p class="error-text">{{ huesped_form.nombres.errors|join:", " }}</p>
                     {% endif %}
                 </div>
-                <div>
-                    <label class="block font-bold mb-1">Apellidos</label>
+                <div class="input-group">
+                    <label for="{{ huesped_form.apellidos.id_for_label }}">Apellidos</label>
                     {{ huesped_form.apellidos }}
                     {% if huesped_form.apellidos.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.apellidos.errors|join:", " }}</p>
+                        <p class="error-text">{{ huesped_form.apellidos.errors|join:", " }}</p>
                     {% endif %}
                 </div>
             </div>
             
-            <!-- CÉDULA Y TELÉFONO EN LA MISMA FILA -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block font-bold mb-1">Número de Cédula</label>
+            <!-- Cédula y Teléfono -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="input-group">
+                    <label>Número de Cédula</label>
                     <div class="flex gap-2">
                         {{ huesped_form.prefijo_cedula }}
                         {{ huesped_form.numero_cedula }}
                     </div>
                     {% if huesped_form.numero_cedula.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.numero_cedula.errors|join:", " }}</p>
+                        <p class="error-text">{{ huesped_form.numero_cedula.errors|join:", " }}</p>
                     {% endif %}
-                    <p class="text-xs text-slate-500 mt-1">Ejemplo: V-17.936.063</p>
+                    <p class="help-text">Ejemplo: V-17.936.063</p>
                 </div>
-                <div>
-                    <label class="block font-bold mb-1">Teléfono</label>
+                <div class="input-group">
+                    <label>Teléfono</label>
                     <div class="flex gap-2">
                         {{ huesped_form.prefijo_telefono }}
                         {{ huesped_form.numero_telefono }}
                     </div>
                     {% if huesped_form.numero_telefono.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.numero_telefono.errors|join:", " }}</p>
+                        <p class="error-text">{{ huesped_form.numero_telefono.errors|join:", " }}</p>
                     {% endif %}
                 </div>
             </div>
-        </div>
 
-        <!-- ✅ SECCIÓN: UBICACIÓN -->
-        <div class="space-y-4">
+            <!-- Ubicación -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block font-bold mb-1">Estado</label>
+                <div class="input-group">
+                    <label for="{{ huesped_form.estado.id_for_label }}">Estado</label>
                     {{ huesped_form.estado }}
                     {% if huesped_form.estado.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.estado.errors|join:", " }}</p>
+                        <p class="error-text">{{ huesped_form.estado.errors|join:", " }}</p>
                     {% endif %}
                 </div>
-                <div>
-                    <label class="block font-bold mb-1">Ciudad</label>
+                <div class="input-group">
+                    <label for="{{ huesped_form.ciudad.id_for_label }}">Ciudad</label>
                     {{ huesped_form.ciudad }}
                     {% if huesped_form.ciudad.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.ciudad.errors|join:", " }}</p>
+                        <p class="error-text">{{ huesped_form.ciudad.errors|join:", " }}</p>
                     {% endif %}
                 </div>
             </div>
-            
-            <div class="w-full">
-                <label class="block font-bold mb-1">{{ huesped_form.sector.label }}</label>
+
+            <div class="input-group">
+                <label for="{{ huesped_form.sector.id_for_label }}">Sector</label>
                 {{ huesped_form.sector }}
                 {% if huesped_form.sector.errors %}
-                    <p class="text-red-600 text-sm mt-1">{{ huesped_form.sector.errors|join:", " }}</p>
+                    <p class="error-text">{{ huesped_form.sector.errors|join:", " }}</p>
                 {% endif %}
             </div>
 
-            <!-- ✅ SECCIÓN: CAPACIDAD MÁXIMA -->
-            <div class="border-b pt-4 pb-2">
-                <h3 class="text-lg font-bold text-slate-800">Capacidad máxima</h3>
+            <!-- Capacidad -->
+            <div class="border-t border-gray-200 pt-4 mt-4">
+                <h4 class="font-bold text-gray-700 mb-3">Capacidad máxima</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="input-group">
+                        <label for="{{ huesped_form.capacidad_ninos.id_for_label }}" class="text-sm">Niños</label>
+                        {{ huesped_form.capacidad_ninos }}
+                        {% if huesped_form.capacidad_ninos.errors %}
+                            <p class="error-text">{{ huesped_form.capacidad_ninos.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="input-group">
+                        <label for="{{ huesped_form.capacidad_adultos.id_for_label }}" class="text-sm">Adultos</label>
+                        {{ huesped_form.capacidad_adultos }}
+                        {% if huesped_form.capacidad_adultos.errors %}
+                            <p class="error-text">{{ huesped_form.capacidad_adultos.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="input-group">
+                        <label for="{{ huesped_form.capacidad_adultos_mayores.id_for_label }}" class="text-sm">Adultos mayores</label>
+                        {{ huesped_form.capacidad_adultos_mayores }}
+                        {% if huesped_form.capacidad_adultos_mayores.errors %}
+                            <p class="error-text">{{ huesped_form.capacidad_adultos_mayores.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block font-bold mb-1 text-sm">Niños</label>
-                    {{ huesped_form.capacidad_ninos }}
-                    {% if huesped_form.capacidad_ninos.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.capacidad_ninos.errors|join:", " }}</p>
+            <!-- Mascotas, Tipo de acogida, Meses -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div class="input-group">
+                    <label class="block font-bold mb-2 text-sm">Acepta Mascotas:</label>
+                    <div class="flex flex-wrap gap-4">
+                        <label class="flex items-center gap-2 text-sm">
+                            {{ huesped_form.acepta_mascotas_pequenas }} 
+                            <span>Pequeñas</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            {{ huesped_form.acepta_mascotas_medianas }} 
+                            <span>Medianas</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            {{ huesped_form.acepta_mascotas_grandes }} 
+                            <span>Grandes</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="{{ huesped_form.tipo_acogida.id_for_label }}">Tipo de Acogida</label>
+                    {{ huesped_form.tipo_acogida }}
+                    {% if huesped_form.tipo_acogida.errors %}
+                        <p class="error-text">{{ huesped_form.tipo_acogida.errors|join:", " }}</p>
                     {% endif %}
                 </div>
-                <div>
-                    <label class="block font-bold mb-1 text-sm">Adultos</label>
-                    {{ huesped_form.capacidad_adultos }}
-                    {% if huesped_form.capacidad_adultos.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.capacidad_adultos.errors|join:", " }}</p>
-                    {% endif %}
-                </div>
-                <div>
-                    <label class="block font-bold mb-1 text-sm">Adultos mayores</label>
-                    {{ huesped_form.capacidad_adultos_mayores }}
-                    {% if huesped_form.capacidad_adultos_mayores.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ huesped_form.capacidad_adultos_mayores.errors|join:", " }}</p>
-                    {% endif %}
-                </div>
             </div>
 
-            <!-- ✅ SECCIÓN: MASCOTAS -->
-            <div class="w-full">
-                <label class="block font-bold mb-2">Acepta Mascotas:</label>
-                <div class="flex flex-wrap gap-4">
-                    <label class="flex items-center">
-                        {{ huesped_form.acepta_mascotas_pequenas }} 
-                        <span class="ml-2">Pequeñas</span>
-                    </label>
-                    <label class="flex items-center">
-                        {{ huesped_form.acepta_mascotas_medianas }} 
-                        <span class="ml-2">Medianas</span>
-                    </label>
-                    <label class="flex items-center">
-                        {{ huesped_form.acepta_mascotas_grandes }} 
-                        <span class="ml-2">Grandes</span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- ✅ SECCIÓN: CONFIGURACIÓN DE ACOGIDA -->
-            <div class="w-full">
-                <label class="block font-bold mb-1">Tipo de Acogida</label>
-                {{ huesped_form.tipo_acogida }}
-                {% if huesped_form.tipo_acogida.errors %}
-                    <p class="text-red-600 text-sm mt-1">{{ huesped_form.tipo_acogida.errors|join:", " }}</p>
-                {% endif %}
-            </div>
-
-            <div class="w-full">
-                <label class="block font-bold mb-1">Meses disponibles</label>
+            <div class="input-group">
+                <label for="{{ huesped_form.tiempo_disponible_meses.id_for_label }}">Meses disponibles</label>
                 {{ huesped_form.tiempo_disponible_meses }}
                 {% if huesped_form.tiempo_disponible_meses.errors %}
-                    <p class="text-red-600 text-sm mt-1">{{ huesped_form.tiempo_disponible_meses.errors|join:", " }}</p>
+                    <p class="error-text">{{ huesped_form.tiempo_disponible_meses.errors|join:", " }}</p>
                 {% endif %}
-            </div>
-
-            <!-- ✅ SECCIÓN: DOCUMENTOS -->
-            <div class="w-full">
-                <label class="block font-bold mb-1">Cédula (Imagen/PDF) *</label>
-                {{ huesped_form.cedula_file }}
-                {% if huesped_form.cedula_file.errors %}
-                    <p class="text-red-600 text-sm mt-1">{{ huesped_form.cedula_file.errors|join:", " }}</p>
-                {% endif %}
-                <p class="text-xs text-slate-500 mt-1">Formatos permitidos: JPG, PNG, PDF (máx. 5MB)</p>
-            </div>
-
-            <div class="w-full">
-                <label class="block font-bold mb-1">Comprobante Residencia *</label>
-                {{ huesped_form.residencia_file }}
-                {% if huesped_form.residencia_file.errors %}
-                    <p class="text-red-600 text-sm mt-1">{{ huesped_form.residencia_file.errors|join:", " }}</p>
-                {% endif %}
-                <p class="text-xs text-slate-500 mt-1">Formatos permitidos: JPG, PNG, PDF (máx. 5MB)</p>
             </div>
         </div>
 
-        <button type="submit" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold mt-6 hover:bg-slate-800 transition">
-            Completar Registro
+        <!-- ==================== PASO 3: DOCUMENTACIÓN ==================== -->
+        <div class="card" style="border-top: 4px solid var(--color-venezuela-red);">
+            <h3 class="text-lg font-bold text-primary flex items-center gap-2 mb-4">
+                <span class="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-xs">3</span>
+                Documentación
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="input-group">
+                    <label for="{{ huesped_form.cedula_file.id_for_label }}">Cédula (Imagen/PDF) *</label>
+                    {{ huesped_form.cedula_file }}
+                    {% if huesped_form.cedula_file.errors %}
+                        <p class="error-text">{{ huesped_form.cedula_file.errors|join:", " }}</p>
+                    {% endif %}
+                    <p class="help-text">Formatos: JPG, PNG, PDF (máx. 5MB)</p>
+                </div>
+                <div class="input-group">
+                    <label for="{{ huesped_form.residencia_file.id_for_label }}">Comprobante Residencia *</label>
+                    {{ huesped_form.residencia_file }}
+                    {% if huesped_form.residencia_file.errors %}
+                        <p class="error-text">{{ huesped_form.residencia_file.errors|join:", " }}</p>
+                    {% endif %}
+                    <p class="help-text">Formatos: JPG, PNG, PDF (máx. 5MB)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ Botón de envío -->
+        <button type="submit" class="btn btn-primary btn-lg btn-block">
+            <span class="text-lg">✅</span> Completar Registro
         </button>
     </form>
 </div>
@@ -238,18 +286,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const estadoSelect = document.querySelector('select[name="estado"]');
     const ciudadSelect = document.querySelector('select[name="ciudad"]');
 
-    // ✅ FUNCIÓN PARA ACTUALIZAR CIUDADES EN EL DROPDOWN
     function actualizarCiudades(estadoSeleccionado) {
-        // Limpiar el select de ciudades
         ciudadSelect.innerHTML = '';
-        
-        // Opción por defecto
         const defaultOption = document.createElement('option');
         defaultOption.value = '';
         defaultOption.textContent = 'Seleccione Ciudad';
         ciudadSelect.appendChild(defaultOption);
         
-        // Si hay estado seleccionado y tiene ciudades, agregarlas
         if (estadoSeleccionado && data[estadoSeleccionado]) {
             data[estadoSeleccionado].forEach(ciudad => {
                 const option = document.createElement('option');
@@ -261,18 +304,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (estadoSelect && ciudadSelect) {
-        // ✅ Evento cuando cambia el estado
         estadoSelect.addEventListener('change', function() {
-            const estado = this.value;
-            actualizarCiudades(estado);
+            actualizarCiudades(this.value);
         });
 
-        // ✅ Si hay un estado seleccionado (cuando el formulario falla), cargar ciudades
         const estadoSeleccionado = estadoSelect.value;
         if (estadoSeleccionado) {
             actualizarCiudades(estadoSeleccionado);
-            
-            // ✅ Si hay una ciudad guardada, seleccionarla
             const ciudadGuardada = "{{ huesped_form.ciudad.value|default:'' }}";
             if (ciudadGuardada) {
                 ciudadSelect.value = ciudadGuardada;
@@ -280,16 +318,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ✅ FORMATO AUTOMÁTICO DE CÉDULA CON PUNTOS
+    // ✅ Formato de cédula
     const cedulaInput = document.getElementById('id_numero_cedula');
     if (cedulaInput) {
         cedulaInput.addEventListener('input', function(e) {
             let valor = this.value.replace(/\D/g, '');
-            
             if (valor.length > 8) {
                 valor = valor.slice(0, 8);
             }
-            
             let formateado = '';
             if (valor.length > 0) {
                 if (valor.length <= 2) {
@@ -300,7 +336,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     formateado = valor.slice(0, 2) + '.' + valor.slice(2, 5) + '.' + valor.slice(5);
                 }
             }
-            
             this.value = formateado;
         });
     }
