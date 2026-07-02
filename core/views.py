@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.urls import reverse
 from django.core.mail import send_mail
 from django.conf import settings
+from django_ratelimit.decorators import ratelimit
 from .models import Huesped, Afectado, UBICACIONES, ESTADO_VERIFICACION_CHOICES
 from .forms import RegistroUsuarioForm, HuespedRegistrationForm
 
@@ -118,6 +119,7 @@ El equipo de VzlaUnida
 
 
 @transaction.atomic
+@ratelimit(key='ip', rate=settings.RATELIMIT_REGISTER, method='POST', block=True)
 def registrar_huesped(request):
     """
     Vista para registrar un nuevo huésped.
@@ -228,17 +230,14 @@ def home_seleccion(request):
     Página de inicio con selección de tipo de usuario.
     Si el usuario ya está autenticado, redirigir al dashboard.
     """
-    # ✅ SI EL USUARIO YA ESTÁ AUTENTICADO, REDIRIGIR AL DASHBOARD
     if request.user.is_authenticated:
         try:
-            # Verificar si tiene perfil de huésped
             huesped = Huesped.objects.get(user=request.user)
             messages.info(request, 'Ya has iniciado sesión.')
             return redirect('dashboard_huesped')
         except Huesped.DoesNotExist:
-            # Si está autenticado pero no tiene perfil de huésped (admin)
             messages.info(request, 'Ya has iniciado sesión como administrador.')
-            return redirect('home')  # O a donde quieras redirigir a los admins
+            return redirect('home')
     
     return render(request, 'home.html')
 
@@ -421,6 +420,7 @@ def buscar_afectados(request):
         return redirect('registrar_huesped')
 
 
+@ratelimit(key='ip', rate=settings.RATELIMIT_LOGIN, method='POST', block=True)
 def login_view(request):
     if request.user.is_authenticated:
         try:
