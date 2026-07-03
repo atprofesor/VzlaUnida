@@ -64,6 +64,18 @@ class HuespedRegistrationForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
     )
 
+    # ✅ CANTIDAD DE PERSONAS (ChoiceField 1-9)
+    cantidad_personas = forms.ChoiceField(
+        choices=[(i, str(i)) for i in range(1, 10)],
+        widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
+    )
+
+    # ✅ MASCOTAS - Simplificado a un solo checkbox
+    acepta_mascotas = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary'})
+    )
+
     # CAMPO MESES COMO LISTA DESPLEGABLE
     tiempo_disponible_meses = forms.ChoiceField(
         choices=[(1, '1 mes'), (3, '3 meses'), (6, '6 meses'), (9, '9 meses'), (12, '12 meses')],
@@ -72,14 +84,16 @@ class HuespedRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = Huesped
-        exclude = ['user', 'estado_verificacion', 'telefono', 'ciudad', 'estado', 'prefijo_cedula', 'numero_cedula']
+        exclude = [
+            'user', 'estado_verificacion', 'telefono', 'ciudad', 'estado', 
+            'prefijo_cedula', 'numero_cedula', 'capacidad_ninos', 'capacidad_adultos', 
+            'capacidad_adultos_mayores', 'acepta_mascotas_pequenas', 
+            'acepta_mascotas_medianas', 'acepta_mascotas_grandes'
+        ]
         widgets = {
             'nombres': forms.TextInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
             'apellidos': forms.TextInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
             'sector': forms.TextInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
-            'capacidad_ninos': forms.NumberInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
-            'capacidad_adultos': forms.NumberInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
-            'capacidad_adultos_mayores': forms.NumberInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
             'tipo_acogida': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
         }
 
@@ -103,7 +117,7 @@ class HuespedRegistrationForm(forms.ModelForm):
         
         return formateado
 
-    # ✅ VALIDACIÓN DE CÉDULA ÚNICA (SIN ERROR DUPLICADO)
+    # ✅ VALIDACIÓN DE CÉDULA ÚNICA
     def clean(self):
         cleaned_data = super().clean()
         prefijo = cleaned_data.get('prefijo_cedula')
@@ -111,16 +125,13 @@ class HuespedRegistrationForm(forms.ModelForm):
         
         # Verificar si ya existe un huésped con esta cédula
         if prefijo and numero:
-            # Limpiar el número de puntos para la búsqueda
             numero_limpio = numero.replace('.', '')
             
-            # Buscar huéspedes con el mismo prefijo y número (sin puntos)
             existe = Huesped.objects.filter(
                 prefijo_cedula=prefijo,
                 numero_cedula=numero_limpio
             ).exists()
             
-            # Si no encuentra con el número limpio, intentar con el número con puntos
             if not existe:
                 existe = Huesped.objects.filter(
                     prefijo_cedula=prefijo,
@@ -128,13 +139,28 @@ class HuespedRegistrationForm(forms.ModelForm):
                 ).exists()
             
             if existe:
-                # ✅ USAR add_error en lugar de ValidationError para evitar duplicados
                 self.add_error(
                     'numero_cedula',
                     f"Ya existe un huésped registrado con la cédula {prefijo}-{numero}. "
                     "Si eres tú, inicia sesión en tu cuenta."
                 )
-                return cleaned_data  # Salir temprano
+                return cleaned_data
+        
+        # ✅ VALIDACIÓN DE CANTIDAD DE PERSONAS
+        cantidad_personas = cleaned_data.get('cantidad_personas')
+        if cantidad_personas:
+            try:
+                cantidad = int(cantidad_personas)
+                if cantidad < 1 or cantidad > 9:
+                    self.add_error(
+                        'cantidad_personas',
+                        "La cantidad de personas debe estar entre 1 y 9."
+                    )
+            except (ValueError, TypeError):
+                self.add_error(
+                    'cantidad_personas',
+                    "Selecciona una cantidad válida."
+                )
         
         # Validación de ciudad
         estado = cleaned_data.get('estado')

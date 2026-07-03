@@ -16,6 +16,7 @@ class HuespedAdmin(admin.ModelAdmin):
         'ciudad', 
         'estado', 
         'tipo_acogida',
+        'cantidad_personas',
         'verificacion_con_estilo',
         'fecha_verificacion_display',
         'has_email',
@@ -39,6 +40,9 @@ class HuespedAdmin(admin.ModelAdmin):
         'estado_verificacion',
         'fecha_verificacion',
         'prefijo_cedula',
+        'acepta_ninos',
+        'acepta_adultos',
+        'acepta_adultos_mayores',
     )
     
     ordering = ('-id',)
@@ -68,14 +72,11 @@ class HuespedAdmin(admin.ModelAdmin):
         }),
         ('Capacidad de Acogida', {
             'fields': (
-                ('capacidad_ninos', 'capacidad_adultos', 'capacidad_adultos_mayores'),
+                'cantidad_personas',
+                ('acepta_ninos', 'acepta_adultos', 'acepta_adultos_mayores'),
+                'acepta_mascotas',  # ✅ Simplificado
                 'tipo_acogida',
                 'tiempo_disponible_meses',
-            )
-        }),
-        ('Mascotas', {
-            'fields': (
-                ('acepta_mascotas_pequenas', 'acepta_mascotas_medianas', 'acepta_mascotas_grandes'),
             )
         }),
         ('Documentación', {

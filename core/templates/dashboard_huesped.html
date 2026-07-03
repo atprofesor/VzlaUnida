@@ -23,7 +23,7 @@
         </div>
     </div>
 
-    <!-- ✅ TARJETA DE PERFIL (más grande y detallada) -->
+    <!-- ✅ TARJETA DE PERFIL -->
     <div class="card p-4">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
             <!-- Columna 1: Huésped -->
@@ -42,23 +42,34 @@
                 <p class="text-gray-400 text-sm truncate">📍 {{ huesped.sector|default:"-" }}</p>
             </div>
             
-            <!-- Columna 3: Capacidad -->
+            <!-- ✅ Columna 3: Capacidad (NUEVA VERSIÓN) -->
             <div>
                 <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Capacidad</p>
                 <p class="font-bold text-primary text-lg">{{ capacidad_total }} <span class="font-normal text-gray-500 text-sm">personas</span></p>
-                <div class="flex gap-2 text-gray-600 text-sm">
-                    <span>👶 {{ huesped.capacidad_ninos }}</span>
-                    <span>👨 {{ huesped.capacidad_adultos }}</span>
-                    <span>👴 {{ huesped.capacidad_adultos_mayores }}</span>
+                <div class="flex flex-wrap gap-1.5 text-gray-600 text-sm mt-1">
+                    {% if huesped.acepta_ninos %}
+                        <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-medium">👶 Niños</span>
+                    {% endif %}
+                    {% if huesped.acepta_adultos %}
+                        <span class="bg-green-50 text-green-700 px-2 py-0.5 rounded text-[10px] font-medium">👨 Adultos</span>
+                    {% endif %}
+                    {% if huesped.acepta_adultos_mayores %}
+                        <span class="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-[10px] font-medium">👴 Adultos mayores</span>
+                    {% endif %}
+                    {% if not huesped.acepta_ninos and not huesped.acepta_adultos and not huesped.acepta_adultos_mayores %}
+                        <span class="text-gray-400 text-[10px]">No especifica grupos</span>
+                    {% endif %}
                 </div>
-                <div class="flex gap-1 mt-0.5">
-                    {% if huesped.acepta_mascotas_pequenas %}<span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">🐕 Peq</span>{% endif %}
-                    {% if huesped.acepta_mascotas_medianas %}<span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">🐕 Med</span>{% endif %}
-                    {% if huesped.acepta_mascotas_grandes %}<span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">🐕 Gra</span>{% endif %}
-                    {% if not huesped.acepta_mascotas_pequenas and not huesped.acepta_mascotas_medianas and not huesped.acepta_mascotas_grandes %}
+
+                <!-- Mascotas -->
+                <div class="flex gap-1 mt-1">
+                    {% if huesped.acepta_mascotas %}
+                        <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">🐕 Acepta mascotas</span>
+                    {% else %}
                         <span class="text-[10px] text-gray-400">No acepta mascotas</span>
                     {% endif %}
                 </div>
+
             </div>
             
             <!-- Columna 4: Estado (con mensaje incluido) -->
@@ -176,7 +187,7 @@
                         <div class="flex items-center justify-between bg-gray-50 rounded px-2 py-1">
                             <div>
                                 <p class="text-xs font-medium text-gray-800">{{ otro.nombres }} {{ otro.apellidos }}</p>
-                                <p class="text-[10px] text-gray-500">📍 {{ otro.ciudad }} - {{ otro.capacidad_total }} pers.</p>
+                                <p class="text-[10px] text-gray-500">📍 {{ otro.ciudad }} - {{ otro.cantidad_personas }} pers.</p>
                             </div>
                             <span class="badge badge-success text-[10px]">✅</span>
                         </div>

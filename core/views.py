@@ -315,19 +315,14 @@ def dashboard_huesped(request):
             estado_verificacion='aprobado'
         ).exclude(id=huesped.id)[:5]
         
-        capacidad_total = (
-            huesped.capacidad_ninos + 
-            huesped.capacidad_adultos + 
-            huesped.capacidad_adultos_mayores
-        )
+        # ✅ CORREGIDO: Usar cantidad_personas en lugar de campos antiguos
+        capacidad_total = huesped.cantidad_personas
         
         top_huespedes = Huesped.objects.filter(
             estado=huesped.estado,
             estado_verificacion='aprobado'
         ).exclude(id=huesped.id).order_by(
-            '-capacidad_ninos', 
-            '-capacidad_adultos', 
-            '-capacidad_adultos_mayores'
+            '-cantidad_personas'
         )[:3]
         
         context = {
@@ -362,11 +357,7 @@ def perfil_huesped(request):
         
         context = {
             'huesped': huesped,
-            'capacidad_total': (
-                huesped.capacidad_ninos + 
-                huesped.capacidad_adultos + 
-                huesped.capacidad_adultos_mayores
-            )
+            'capacidad_total': huesped.cantidad_personas
         }
         return render(request, 'perfil_huesped.html', context)
         

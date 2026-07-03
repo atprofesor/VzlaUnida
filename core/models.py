@@ -158,12 +158,13 @@ class Huesped(models.Model):
     ciudad = models.CharField(max_length=100, default='')
     estado = models.CharField(max_length=100, default='')
     sector = models.CharField(max_length=300, default='')
-    capacidad_ninos = models.IntegerField(default=0)
-    capacidad_adultos = models.IntegerField(default=0)
-    capacidad_adultos_mayores = models.IntegerField(default=0)
-    acepta_mascotas_pequenas = models.BooleanField(default=False)
-    acepta_mascotas_medianas = models.BooleanField(default=False)
-    acepta_mascotas_grandes = models.BooleanField(default=False)
+    
+    # ✅ NUEVA ESTRUCTURA DE CAPACIDAD
+    cantidad_personas = models.IntegerField(default=0, help_text="Cantidad total de personas que puede albergar")
+    acepta_ninos = models.BooleanField(default=False, help_text="Acepta niños (menor de 18 años)")
+    acepta_adultos = models.BooleanField(default=False, help_text="Acepta adultos")
+    acepta_adultos_mayores = models.BooleanField(default=False, help_text="Acepta adultos mayores (mayor a 65 años)")
+    acepta_mascotas = models.BooleanField(default=False, help_text="Acepta mascotas")
     tipo_acogida = models.CharField(max_length=50, choices=TIPO_ACOGIDA_CHOICES, default='Habitacion(es)')
     tiempo_disponible_meses = models.IntegerField(default=1)
     cedula_file = models.FileField(upload_to='documentos/cedulas/', blank=False)
@@ -192,7 +193,7 @@ class Huesped(models.Model):
 
     def capacidad_total(self):
         """Calcula la capacidad total de personas que puede albergar"""
-        return self.capacidad_ninos + self.capacidad_adultos + self.capacidad_adultos_mayores
+        return self.cantidad_personas
     
     def cedula_completa(self):
         """Retorna la cédula completa con prefijo y número"""
