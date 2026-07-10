@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-[85vh] flex flex-col gap-3">
+    <!-- ✅ ENCABEZADO COMPACTO -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+        <div>
+            <h1 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <span>📊</span> Mi Dashboard
+            </h1>
+            <p class="text-xs text-gray-500">{{ mensaje_bienvenida }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="badge {% if afectado.estado_verificacion == 'aprobado' %}badge-success{% elif afectado.estado_verificacion == 'rechazado' %}badge-danger{% elif afectado.estado_verificacion == 'en_revision' %}badge-info{% elif afectado.estado_verificacion == 'requiere_correccion' %}badge-warning{% else %}badge-secondary{% endif %} text-xs">
+                {% if afectado.estado_verificacion == 'aprobado' %}✅
+                {% elif afectado.estado_verificacion == 'rechazado' %}❌
+                {% elif afectado.estado_verificacion == 'en_revision' %}🔍
+                {% elif afectado.estado_verificacion == 'requiere_correccion' %}📝
+                {% else %}⏳{% endif %}
+                {{ afectado.get_estado_display }}
+            </span>
+        </div>
+    </div>
+
+    <!-- ✅ ALERTA DE VERIFICACIÓN -->
+    {% if estado_info %}
+        <div class="alert {% if afectado.estado_verificacion == 'aprobado' %}alert-success{% elif afectado.estado_verificacion == 'rechazado' %}alert-danger{% elif afectado.estado_verificacion == 'en_revision' %}alert-info{% elif afectado.estado_verificacion == 'requiere_correccion' %}alert-warning{% else %}alert-info{% endif %} py-1.5 px-3 text-xs">
+            <span class="alert-icon text-sm">{{ estado_info.icono }}</span>
+            <div class="alert-content">
+                <p class="text-xs">{{ estado_info.mensaje }}</p>
+                {% if afectado.comentario_verificacion and afectado.estado_verificacion == 'requiere_correccion' %}
+                    <p class="text-[10px] mt-0.5 opacity-80">
+                        <span class="font-semibold">Comentario:</span> {{ afectado.comentario_verificacion }}
+                    </p>
+                {% endif %}
+                {% if afectado.comentario_verificacion and afectado.estado_verificacion == 'rechazado' %}
+                    <p class="text-[10px] mt-0.5 opacity-80">
+                        <span class="font-semibold">Motivo:</span> {{ afectado.comentario_verificacion }}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- ✅ TARJETA DE PERFIL -->
+    <div class="card p-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <!-- Columna 1: Afectado -->
+            <div>
+                <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Afectado</p>
+                <p class="font-bold text-gray-800 text-base">{{ afectado.nombres }} {{ afectado.apellidos }}</p>
+                <p class="text-gray-600 text-sm">🔹 {{ afectado.cedula_completa }}</p>
+                <p class="text-gray-600 text-sm">📱 {{ afectado.telefono }}</p>
+            </div>
+            
+            <!-- Columna 2: Ubicación -->
+            <div>
+                <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Ubicación</p>
+                <p class="font-semibold text-gray-800">{{ afectado.ciudad }}</p>
+                <p class="text-gray-600 text-sm">{{ afectado.estado }}</p>
+                <p class="text-gray-400 text-sm truncate">📍 {{ afectado.sector|default:"-" }}</p>
+                <p class="text-gray-400 text-xs truncate">🏠 {{ afectado.direccion_anterior|default:"-" }}</p>
+            </div>
+            
+            <!-- Columna 3: Núcleo Familiar -->
+            <div>
+                <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Núcleo Familiar</p>
+                <p class="font-bold text-primary text-lg">{{ cantidad_total }} <span class="font-normal text-gray-500 text-sm">personas</span></p>
+                <div class="flex flex-wrap gap-1.5 text-gray-600 text-sm mt-1">
+                    {% if afectado.cantidad_ninos > 0 %}
+                        <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-medium">👶 {{ afectado.cantidad_ninos }}</span>
+                    {% endif %}
+                    {% if afectado.cantidad_adultos > 0 %}
+                        <span class="bg-green-50 text-green-700 px-2 py-0.5 rounded text-[10px] font-medium">👨 {{ afectado.cantidad_adultos }}</span>
+                    {% endif %}
+                    {% if afectado.cantidad_adultos_mayores > 0 %}
+                        <span class="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-[10px] font-medium">👴 {{ afectado.cantidad_adultos_mayores }}</span>
+                    {% endif %}
+                </div>
+                <div class="flex gap-1 mt-1">
+                    {% if afectado.tiene_mascotas %}
+                        <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">🐕 Tiene mascotas</span>
+                    {% else %}
+                        <span class="text-[10px] text-gray-400">No tiene mascotas</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Columna 4: Estado -->
+            <div>
+                <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Estado</p>
+                <span class="badge {% if afectado.estado_verificacion == 'aprobado' %}badge-success{% elif afectado.estado_verificacion == 'rechazado' %}badge-danger{% elif afectado.estado_verificacion == 'en_revision' %}badge-info{% elif afectado.estado_verificacion == 'requiere_correccion' %}badge-warning{% else %}badge-secondary{% endif %} text-sm mb-1 inline-block">
+                    {{ afectado.get_estado_display }}
+                </span>
+                
+                <!-- Mensaje de estado -->
+                {% if afectado.estado_verificacion == 'pendiente' %}
+                    <p class="text-xs text-yellow-600 mt-0.5">⏳ El administrador revisará tus documentos</p>
+                {% elif afectado.estado_verificacion == 'en_revision' %}
+                    <p class="text-xs text-blue-600 mt-0.5">🔍 Tu perfil está siendo revisado</p>
+                {% elif afectado.estado_verificacion == 'aprobado' %}
+                    <p class="text-xs text-green-600 mt-0.5">✅ Ya puedes buscar alojamiento</p>
+                {% elif afectado.estado_verificacion == 'rechazado' %}
+                    <p class="text-xs text-red-600 mt-0.5">❌ Contacta al administrador</p>
+                    {% if afectado.comentario_verificacion %}
+                        <p class="text-[10px] text-red-500 mt-0.5">Motivo: {{ afectado.comentario_verificacion }}</p>
+                    {% endif %}
+                {% elif afectado.estado_verificacion == 'requiere_correccion' %}
+                    <p class="text-xs text-orange-600 mt-0.5">📝 Revisa el comentario del administrador</p>
+                    {% if afectado.comentario_verificacion %}
+                        <p class="text-[10px] text-orange-500 mt-0.5">{{ afectado.comentario_verificacion }}</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ SECCIÓN INTERMEDIA: ESTADÍSTICAS + HUÉSPEDES -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1">
+        <!-- Columna 1: Estadísticas rápidas -->
+        <div class="card p-3 flex flex-col justify-between">
+            <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">📈 Estadísticas</p>
+            <div class="space-y-1.5 mt-1">
+                <div class="flex justify-between items-center border-b border-gray-100 pb-1">
+                    <span class="text-xs text-gray-600">Huéspedes en {{ afectado.estado }}</span>
+                    <span class="text-sm font-bold text-primary">{{ total_huespedes_estado }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-600">Huéspedes en {{ afectado.ciudad }}</span>
+                    <span class="text-sm font-bold text-primary">{{ total_huespedes_ciudad }}</span>
+                </div>
+            </div>
+            <div class="mt-1.5 pt-1.5 border-t border-gray-100">
+                <p class="text-[10px] text-gray-400">Verificado: {% if afectado.fecha_verificacion %}{{ afectado.fecha_verificacion|date:"d/m/Y" }}{% else %}Pendiente{% endif %}</p>
+            </div>
+        </div>
+
+        <!-- Columna 2: Huéspedes cercanos -->
+        <div class="card p-3 flex flex-col">
+            <div class="flex items-center justify-between mb-1.5">
+                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">🏠 Huéspedes cercanos</p>
+                <span class="badge badge-info text-[10px]">{{ huespedes_cercanos|length }}</span>
+            </div>
+            
+            {% if afectado.estado_verificacion == 'aprobado' %}
+                {% if huespedes_cercanos %}
+                    <div class="flex-1 overflow-y-auto max-h-[80px] space-y-1 pr-1">
+                        {% for huesped in huespedes_cercanos|slice:":4" %}
+                            <div class="flex items-center justify-between bg-gray-50 rounded px-2 py-1">
+                                <div>
+                                    <p class="text-xs font-medium text-gray-800">{{ huesped.nombres }} {{ huesped.apellidos }}</p>
+                                    <p class="text-[10px] text-gray-500">📍 {{ huesped.ciudad }} - {{ huesped.cantidad_personas }} pers.</p>
+                                </div>
+                                <a href="#" class="text-[10px] bg-primary text-white px-2 py-0.5 rounded hover:bg-primary-dark transition">Contactar</a>
+                            </div>
+                        {% endfor %}
+                        {% if huespedes_cercanos|length > 4 %}
+                            <p class="text-[10px] text-gray-400 text-center">+{{ huespedes_cercanos|length|add:"-4" }} más</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="flex-1 flex items-center justify-center">
+                        <p class="text-xs text-gray-400 text-center">No hay huéspedes cercanos</p>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="flex-1 flex items-center justify-center">
+                    <p class="text-xs text-gray-400 text-center">
+                        {% if afectado.estado_verificacion == 'pendiente' %}⏳ Verifica tu perfil primero
+                        {% elif afectado.estado_verificacion == 'en_revision' %}🔍 Perfil en revisión
+                        {% elif afectado.estado_verificacion == 'requiere_correccion' %}📝 Requiere correcciones
+                        {% elif afectado.estado_verificacion == 'rechazado' %}❌ Perfil rechazado
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ✅ BANNER INFERIOR DE LA BANDERA -->
+    <div class="w-full" style="background: linear-gradient(90deg, #FFD100 0%, #FFD100 33%, #001F5C 33%, #001F5C 66%, #CF202F 66%, #CF202F 100%); height: 6px; border-radius: 3px;"></div>
+
+    <!-- ✅ FOOTER INFORMATIVO -->
+    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+            <div>
+                <p class="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <span>❤️</span> Hecho con amor para el soporte humanitario en Venezuela
+                </p>
+                <p class="text-xs text-gray-500 mt-0.5 max-w-md">
+                    Plataforma dedicada a facilitar el reencuentro familiar en situaciones de emergencia.
+                    Cumplimos con los lineamientos internacionales de protección de identidad.
+                </p>
+            </div>
+            
+            <div class="flex-shrink-0">
+                <p class="text-xs text-gray-500 font-medium mb-1">📱 Contáctanos:</p>
+                <div class="flex flex-wrap items-center justify-center md:justify-end gap-3 text-xs">
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors flex items-center gap-1">
+                        <span>📸</span> @Venezuelaunida
+                    </a>
+                    <span class="text-gray-300 hidden sm:inline">|</span>
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors flex items-center gap-1">
+                        <span>🎵</span> @venezuelaunida
+                    </a>
+                    <span class="text-gray-300 hidden sm:inline">|</span>
+                    <a href="mailto:info@vzlaunida.com" class="text-gray-600 hover:text-primary transition-colors flex items-center gap-1">
+                        <span>✉️</span> info@vzlaunida.com
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-col items-center mt-3 pt-3 border-t border-gray-200">
+            <div class="flex gap-1.5">
+                <span class="w-4 h-4 rounded-full" style="background: #FFD100;"></span>
+                <span class="w-4 h-4 rounded-full" style="background: #001F5C;"></span>
+                <span class="w-4 h-4 rounded-full" style="background: #CF202F;"></span>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-1.5">
+                🇻🇪 Unidos por Venezuela — VzlaUnida
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

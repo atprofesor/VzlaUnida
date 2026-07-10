@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Huesped, UBICACIONES, TIPO_ACOGIDA_CHOICES
+from .models import Huesped, Afectado, UBICACIONES, TIPO_ACOGIDA_CHOICES
 import os
 
 class RegistroUsuarioForm(forms.ModelForm):
@@ -31,7 +31,6 @@ class RegistroUsuarioForm(forms.ModelForm):
 
 
 class HuespedRegistrationForm(forms.ModelForm):
-    # CÉDULA CON PREFIJO
     prefijo_cedula = forms.ChoiceField(
         choices=[('V', 'V'), ('E', 'E')],
         widget=forms.Select(attrs={'class': 'p-2 border rounded-lg bg-slate-50'})
@@ -64,19 +63,16 @@ class HuespedRegistrationForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
     )
 
-    # ✅ CANTIDAD DE PERSONAS (ChoiceField 1-9)
     cantidad_personas = forms.ChoiceField(
         choices=[(i, str(i)) for i in range(1, 10)],
         widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
     )
 
-    # ✅ MASCOTAS - Simplificado a un solo checkbox
     acepta_mascotas = forms.BooleanField(
         required=False,
         widget=forms.CheckboxInput(attrs={'class': 'w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary'})
     )
 
-    # CAMPO MESES COMO LISTA DESPLEGABLE
     tiempo_disponible_meses = forms.ChoiceField(
         choices=[(1, '1 mes'), (3, '3 meses'), (6, '6 meses'), (9, '9 meses'), (12, '12 meses')],
         widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
@@ -97,7 +93,6 @@ class HuespedRegistrationForm(forms.ModelForm):
             'tipo_acogida': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
         }
 
-    # ✅ VALIDACIÓN DE CÉDULA
     def clean_numero_cedula(self):
         numero = self.cleaned_data.get('numero_cedula', '')
         numero_limpio = numero.replace('.', '')
@@ -117,13 +112,11 @@ class HuespedRegistrationForm(forms.ModelForm):
         
         return formateado
 
-    # ✅ VALIDACIÓN DE CÉDULA ÚNICA
     def clean(self):
         cleaned_data = super().clean()
         prefijo = cleaned_data.get('prefijo_cedula')
         numero = cleaned_data.get('numero_cedula')
         
-        # Verificar si ya existe un huésped con esta cédula
         if prefijo and numero:
             numero_limpio = numero.replace('.', '')
             
@@ -146,7 +139,6 @@ class HuespedRegistrationForm(forms.ModelForm):
                 )
                 return cleaned_data
         
-        # ✅ VALIDACIÓN DE CANTIDAD DE PERSONAS
         cantidad_personas = cleaned_data.get('cantidad_personas')
         if cantidad_personas:
             try:
@@ -161,6 +153,188 @@ class HuespedRegistrationForm(forms.ModelForm):
                     'cantidad_personas',
                     "Selecciona una cantidad válida."
                 )
+        
+        estado = cleaned_data.get('estado')
+        ciudad = cleaned_data.get('ciudad')
+        
+        if estado and ciudad:
+            if estado not in UBICACIONES:
+                self.add_error('estado', "Estado no válido.")
+                return cleaned_data
+            if ciudad not in UBICACIONES.get(estado, []):
+                self.add_error(
+                    'ciudad',
+                    f"La ciudad '{ciudad}' no pertenece al estado '{estado}'. "
+                    f"Ciudades disponibles: {', '.join(UBICACIONES.get(estado, []))}"
+                )
+        
+        return cleaned_data
+
+    def clean_cedula_file(self):
+        file = self.cleaned_data.get('cedula_file')
+        if not file:
+            raise forms.ValidationError("El archivo de cédula es obligatorio.")
+        
+        ext = os.path.splitext(file.name)[1].lower()
+        if ext not in ['.jpg', '.jpeg', '.png', '.pdf']:
+            raise forms.ValidationError("Solo se permiten archivos JPG, PNG o PDF.")
+        
+        if file.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("El archivo no debe superar los 5MB.")
+        
+        return file
+
+    def clean_residencia_file(self):
+        file = self.cleaned_data.get('residencia_file')
+        if not file:
+            raise forms.ValidationError("El comprobante de residencia es obligatorio.")
+        
+        ext = os.path.splitext(file.name)[1].lower()
+        if ext not in ['.jpg', '.jpeg', '.png', '.pdf']:
+            raise forms.ValidationError("Solo se permiten archivos JPG, PNG o PDF.")
+        
+        if file.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("El archivo no debe superar los 5MB.")
+        
+        return file
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        estado_seleccionado = self.initial.get('estado') or self.data.get('estado')
+        if estado_seleccionado and estado_seleccionado in UBICACIONES:
+            ciudades = UBICACIONES[estado_seleccionado]
+            self.fields['ciudad'].choices = [('', 'Seleccione Ciudad')] + [(c, c) for c in ciudades]
+
+
+class AfectadoRegistrationForm(forms.ModelForm):
+    # CÉDULA
+    prefijo_cedula = forms.ChoiceField(
+        choices=[('V', 'V'), ('E', 'E')],
+        widget=forms.Select(attrs={'class': 'p-2 border rounded-lg bg-slate-50'})
+    )
+    numero_cedula = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'p-2 border rounded-lg bg-slate-50',
+            'placeholder': '17.936.063',
+            'id': 'id_numero_cedula_afectado'
+        })
+    )
+    
+    # TELÉFONO
+    prefijo_telefono = forms.ChoiceField(
+        choices=[('0412','0412'),('0422','0422'),('0414','0414'),('0424','0424'),('0416','0416'),('0426','0426')], 
+        widget=forms.Select(attrs={'class': 'p-2 border rounded-lg bg-slate-50'})
+    )
+    numero_telefono = forms.CharField(
+        max_length=7, 
+        widget=forms.TextInput(attrs={'class': 'p-2 border rounded-lg bg-slate-50'})
+    )
+    
+    # UBICACIÓN
+    estado = forms.ChoiceField(
+        choices=[('', 'Seleccione Estado')] + [(e, e) for e in UBICACIONES.keys()], 
+        widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
+    )
+    ciudad = forms.ChoiceField(
+        choices=[('', 'Seleccione Ciudad')],
+        widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
+    )
+    
+    # NÚCLEO FAMILIAR - Cantidades con dropdown 0-9
+    cantidad_ninos = forms.ChoiceField(
+        choices=[(i, str(i)) for i in range(0, 10)],
+        widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
+    )
+    cantidad_adultos = forms.ChoiceField(
+        choices=[(i, str(i)) for i in range(0, 10)],
+        widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
+    )
+    cantidad_adultos_mayores = forms.ChoiceField(
+        choices=[(i, str(i)) for i in range(0, 10)],
+        widget=forms.Select(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'})
+    )
+    
+    tiene_mascotas = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary'})
+    )
+
+    class Meta:
+        model = Afectado
+        exclude = [
+            'user', 'estado_verificacion', 'telefono', 'ciudad', 'estado',
+            'prefijo_cedula', 'numero_cedula'
+        ]
+        widgets = {
+            'nombres': forms.TextInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
+            'apellidos': forms.TextInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
+            'sector': forms.TextInput(attrs={'class': 'w-full p-2 border rounded-lg bg-slate-50'}),
+            'direccion_anterior': forms.Textarea(attrs={
+                'class': 'w-full p-2 border rounded-lg bg-slate-50',
+                'rows': 3,
+                'placeholder': 'Ej: Calle Principal, Casa #12, Urbanización El Centro'
+            }),
+        }
+
+    def clean_numero_cedula(self):
+        numero = self.cleaned_data.get('numero_cedula', '')
+        numero_limpio = numero.replace('.', '')
+        
+        if not numero_limpio.isdigit():
+            raise forms.ValidationError("La cédula debe contener solo números (ej: 17936063)")
+        
+        if len(numero_limpio) < 6 or len(numero_limpio) > 8:
+            raise forms.ValidationError("La cédula debe tener entre 6 y 8 dígitos")
+        
+        if len(numero_limpio) == 8:
+            formateado = f"{numero_limpio[:2]}.{numero_limpio[2:5]}.{numero_limpio[5:]}"
+        elif len(numero_limpio) == 7:
+            formateado = f"{numero_limpio[:1]}.{numero_limpio[1:4]}.{numero_limpio[4:]}"
+        else:
+            formateado = numero_limpio
+        
+        return formateado
+
+    def clean(self):
+        cleaned_data = super().clean()
+        prefijo = cleaned_data.get('prefijo_cedula')
+        numero = cleaned_data.get('numero_cedula')
+        
+        # Verificar cédula única en afectados
+        if prefijo and numero:
+            numero_limpio = numero.replace('.', '')
+            
+            existe = Afectado.objects.filter(
+                prefijo_cedula=prefijo,
+                numero_cedula=numero_limpio
+            ).exists()
+            
+            if not existe:
+                existe = Afectado.objects.filter(
+                    prefijo_cedula=prefijo,
+                    numero_cedula=numero
+                ).exists()
+            
+            if existe:
+                self.add_error(
+                    'numero_cedula',
+                    f"Ya existe un afectado registrado con la cédula {prefijo}-{numero}. "
+                    "Si eres tú, inicia sesión en tu cuenta."
+                )
+                return cleaned_data
+        
+        # Verificar que al menos hay una persona en el núcleo familiar
+        cantidad_ninos = int(cleaned_data.get('cantidad_ninos', 0))
+        cantidad_adultos = int(cleaned_data.get('cantidad_adultos', 0))
+        cantidad_adultos_mayores = int(cleaned_data.get('cantidad_adultos_mayores', 0))
+        
+        if cantidad_ninos == 0 and cantidad_adultos == 0 and cantidad_adultos_mayores == 0:
+            self.add_error(
+                'cantidad_adultos',
+                "Debe indicar al menos una persona en el núcleo familiar (incluyéndote a ti mismo)."
+            )
         
         # Validación de ciudad
         estado = cleaned_data.get('estado')
@@ -179,7 +353,6 @@ class HuespedRegistrationForm(forms.ModelForm):
         
         return cleaned_data
 
-    # ✅ VALIDACIÓN DE ARCHIVO CÉDULA
     def clean_cedula_file(self):
         file = self.cleaned_data.get('cedula_file')
         if not file:
@@ -194,7 +367,6 @@ class HuespedRegistrationForm(forms.ModelForm):
         
         return file
 
-    # ✅ VALIDACIÓN DE ARCHIVO RESIDENCIA
     def clean_residencia_file(self):
         file = self.cleaned_data.get('residencia_file')
         if not file:
@@ -209,11 +381,9 @@ class HuespedRegistrationForm(forms.ModelForm):
         
         return file
 
-    # ✅ INICIALIZAR EL FORMULARIO PARA ACTUALIZAR CHOICES DE CIUDAD
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Si hay un estado seleccionado, actualizar las opciones de ciudad
         estado_seleccionado = self.initial.get('estado') or self.data.get('estado')
         if estado_seleccionado and estado_seleccionado in UBICACIONES:
             ciudades = UBICACIONES[estado_seleccionado]

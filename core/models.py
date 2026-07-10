@@ -145,12 +145,12 @@ TIPO_ACOGIDA_CHOICES = [
     ('Vivienda completa', 'Vivienda completa'),
 ]
 
+
 class Huesped(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     nombres = models.CharField(max_length=100, default='')
     apellidos = models.CharField(max_length=100, default='')
     
-    # CÉDULA CON PREFIJO Y NÚMERO
     prefijo_cedula = models.CharField(max_length=1, choices=[('V', 'V'), ('E', 'E')], default='V')
     numero_cedula = models.CharField(max_length=20, default='')
     
@@ -159,12 +159,11 @@ class Huesped(models.Model):
     estado = models.CharField(max_length=100, default='')
     sector = models.CharField(max_length=300, default='')
     
-    # ✅ NUEVA ESTRUCTURA DE CAPACIDAD
-    cantidad_personas = models.IntegerField(default=0, help_text="Cantidad total de personas que puede albergar")
-    acepta_ninos = models.BooleanField(default=False, help_text="Acepta niños (menor de 18 años)")
-    acepta_adultos = models.BooleanField(default=False, help_text="Acepta adultos")
-    acepta_adultos_mayores = models.BooleanField(default=False, help_text="Acepta adultos mayores (mayor a 65 años)")
-    acepta_mascotas = models.BooleanField(default=False, help_text="Acepta mascotas")
+    cantidad_personas = models.IntegerField(default=0)
+    acepta_ninos = models.BooleanField(default=False)
+    acepta_adultos = models.BooleanField(default=False)
+    acepta_adultos_mayores = models.BooleanField(default=False)
+    acepta_mascotas = models.BooleanField(default=False)
     tipo_acogida = models.CharField(max_length=50, choices=TIPO_ACOGIDA_CHOICES, default='Habitacion(es)')
     tiempo_disponible_meses = models.IntegerField(default=1)
     cedula_file = models.FileField(upload_to='documentos/cedulas/', blank=False)
@@ -186,39 +185,88 @@ class Huesped(models.Model):
     )
 
     class Meta:
-        # ✅ RESTRICCIÓN: Cédula única (prefijo + número)
         unique_together = ['prefijo_cedula', 'numero_cedula']
         verbose_name = 'Huésped'
         verbose_name_plural = 'Huéspedes'
 
     def capacidad_total(self):
-        """Calcula la capacidad total de personas que puede albergar"""
         return self.cantidad_personas
     
     def cedula_completa(self):
-        """Retorna la cédula completa con prefijo y número"""
         return f"{self.prefijo_cedula}-{self.numero_cedula}"
     
     def is_verified(self):
-        """Verifica si el huésped está aprobado"""
         return self.estado_verificacion == 'aprobado'
     
     def is_pending(self):
-        """Verifica si el huésped está pendiente"""
         return self.estado_verificacion == 'pendiente'
     
     def get_estado_display(self):
-        """Retorna el estado de verificación con emoji"""
         return dict(ESTADO_VERIFICACION_CHOICES).get(self.estado_verificacion, self.estado_verificacion)
     
     def __str__(self):
         return f"{self.nombres} {self.apellidos} ({self.cedula_completa()})"
 
+
 class Afectado(models.Model):
-    nombre_completo = models.CharField(max_length=200)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    nombres = models.CharField(max_length=100, default='')
+    apellidos = models.CharField(max_length=100, default='')
+    
+    prefijo_cedula = models.CharField(max_length=1, choices=[('V', 'V'), ('E', 'E')], default='V')
+    numero_cedula = models.CharField(max_length=20, default='')
+    
     telefono = models.CharField(max_length=20, default='')
     ciudad = models.CharField(max_length=100, default='')
     estado = models.CharField(max_length=100, default='')
+    sector = models.CharField(max_length=300, default='')
+    direccion_anterior = models.TextField(default='', help_text="Dirección donde vivía antes del terremoto")
+    
+    # Núcleo familiar
+    cantidad_ninos = models.IntegerField(default=0, help_text="Cantidad de niños en el núcleo familiar (menor de 18 años)")
+    cantidad_adultos = models.IntegerField(default=0, help_text="Cantidad de adultos en el núcleo familiar")
+    cantidad_adultos_mayores = models.IntegerField(default=0, help_text="Cantidad de adultos mayores en el núcleo familiar (mayor a 65 años)")
+    tiene_mascotas = models.BooleanField(default=False, help_text="Indica si el núcleo familiar tiene mascotas")
+    
+    cedula_file = models.FileField(upload_to='documentos/cedulas_afectados/', blank=False)
+    residencia_file = models.FileField(upload_to='documentos/residencia_afectados/', blank=False)
+    
+    estado_verificacion = models.CharField(
+        max_length=20, 
+        choices=ESTADO_VERIFICACION_CHOICES, 
+        default='pendiente'
+    )
+    comentario_verificacion = models.TextField(
+        blank=True, 
+        null=True,
+        help_text="Comentario del administrador sobre la verificación"
+    )
+    fecha_verificacion = models.DateTimeField(
+        blank=True, 
+        null=True,
+        help_text="Fecha en que se realizó la verificación"
+    )
+
+    class Meta:
+        unique_together = ['prefijo_cedula', 'numero_cedula']
+        verbose_name = 'Afectado'
+        verbose_name_plural = 'Afectados'
+
+    def cantidad_total(self):
+        """Calcula la cantidad total de personas en el núcleo familiar"""
+        return self.cantidad_ninos + self.cantidad_adultos + self.cantidad_adultos_mayores
+    
+    def cedula_completa(self):
+        return f"{self.prefijo_cedula}-{self.numero_cedula}"
+    
+    def is_verified(self):
+        return self.estado_verificacion == 'aprobado'
+    
+    def is_pending(self):
+        return self.estado_verificacion == 'pendiente'
+    
+    def get_estado_display(self):
+        return dict(ESTADO_VERIFICACION_CHOICES).get(self.estado_verificacion, self.estado_verificacion)
     
     def __str__(self):
-        return f"Afectado: {self.nombre_completo}"
+        return f"{self.nombres} {self.apellidos} ({self.cedula_completa()})"

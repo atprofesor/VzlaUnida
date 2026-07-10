@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- ✅ Encabezado con steps -->
+    <div class="mb-6">
+        <h2 class="text-2xl font-extrabold text-primary flex items-center gap-2">
+            <span class="text-3xl">📝</span> Registro de Afectado
+        </h2>
+        <p class="text-gray-500 mt-1">Completa todos los campos para registrarte como afectado</p>
+        
+        <!-- ✅ Indicador de pasos -->
+        <div class="steps mt-4">
+            <div class="step active">
+                <span class="step-number">1</span>
+                <span>Datos de acceso</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <span>Datos personales</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step">
+                <span class="step-number">3</span>
+                <span>Núcleo familiar</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step">
+                <span class="step-number">4</span>
+                <span>Documentación</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ FORMULARIO (INICIALMENTE OCULTO) -->
+    <div id="formularioRegistro" style="display:none;">
+        <!-- Mensajes de error -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} mb-4">
+                    <span class="alert-icon">
+                        {% if message.tags == 'error' %}❌
+                        {% elif message.tags == 'success' %}✅
+                        {% else %}ℹ️{% endif %}
+                    </span>
+                    <div class="alert-content">
+                        <p>{{ message }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Errores del formulario -->
+        {% if user_form.errors or afectado_form.errors %}
+            <div class="alert alert-danger mb-6">
+                <span class="alert-icon">⚠️</span>
+                <div class="alert-content">
+                    <div class="alert-title">Por favor corrige los siguientes errores:</div>
+                    <ul class="list-disc pl-5 mt-2 space-y-1">
+                        {% for field, errors in user_form.errors.items %}
+                            <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
+                        {% endfor %}
+                        {% for field, errors in afectado_form.errors.items %}
+                            <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
+                        {% endfor %}
+                        {% if user_form.non_field_errors %}
+                            <li><strong>General:</strong> {{ user_form.non_field_errors|join:", " }}</li>
+                        {% endif %}
+                        {% if afectado_form.non_field_errors %}
+                            <li><strong>General:</strong> {{ afectado_form.non_field_errors|join:", " }}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- ✅ Formulario -->
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- ============================================================ -->
+            <!-- ==================== SECCIÓN 1: DATOS DE ACCESO ==================== -->
+            <!-- ============================================================ -->
+            <div class="card card-primary">
+                <h3 class="text-lg font-bold text-primary flex items-center gap-2 mb-4">
+                    <span class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">1</span>
+                    Información de Acceso
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label for="{{ user_form.username.id_for_label }}">Nombre de Usuario</label>
+                        {{ user_form.username }}
+                        {% if user_form.username.errors %}
+                            <p class="error-text">{{ user_form.username.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="input-group">
+                        <label for="{{ user_form.email.id_for_label }}">Correo Electrónico</label>
+                        {{ user_form.email }}
+                        {% if user_form.email.errors %}
+                            <p class="error-text">{{ user_form.email.errors|join:", " }}</p>
+                        {% endif %}
+                        <p class="help-text">Recibirás notificaciones de verificación</p>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="{{ user_form.password.id_for_label }}">Contraseña</label>
+                    {{ user_form.password }}
+                    {% if user_form.password.errors %}
+                        <p class="error-text">{{ user_form.password.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ==================== SECCIÓN 2: DATOS PERSONALES ==================== -->
+            <!-- ============================================================ -->
+            <div class="card card-accent">
+                <h3 class="text-lg font-bold text-primary flex items-center gap-2 mb-4">
+                    <span class="w-6 h-6 rounded-full bg-secondary text-gray-900 flex items-center justify-center text-xs font-bold">2</span>
+                    Datos Personales
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label for="{{ afectado_form.nombres.id_for_label }}">Nombres</label>
+                        {{ afectado_form.nombres }}
+                        {% if afectado_form.nombres.errors %}
+                            <p class="error-text">{{ afectado_form.nombres.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="input-group">
+                        <label for="{{ afectado_form.apellidos.id_for_label }}">Apellidos</label>
+                        {{ afectado_form.apellidos }}
+                        {% if afectado_form.apellidos.errors %}
+                            <p class="error-text">{{ afectado_form.apellidos.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Cédula y Teléfono -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label>Número de Cédula</label>
+                        <div class="flex gap-2">
+                            {{ afectado_form.prefijo_cedula }}
+                            {{ afectado_form.numero_cedula }}
+                        </div>
+                        {% if afectado_form.numero_cedula.errors %}
+                            <p class="error-text">{{ afectado_form.numero_cedula.errors|join:", " }}</p>
+                        {% endif %}
+                        <p class="help-text">Ejemplo: V-17.936.063</p>
+                    </div>
+                    <div class="input-group">
+                        <label>Teléfono</label>
+                        <div class="flex gap-2">
+                            {{ afectado_form.prefijo_telefono }}
+                            {{ afectado_form.numero_telefono }}
+                        </div>
+                        {% if afectado_form.numero_telefono.errors %}
+                            <p class="error-text">{{ afectado_form.numero_telefono.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Ubicación -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label for="{{ afectado_form.estado.id_for_label }}">Estado</label>
+                        {{ afectado_form.estado }}
+                        {% if afectado_form.estado.errors %}
+                            <p class="error-text">{{ afectado_form.estado.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="input-group">
+                        <label for="{{ afectado_form.ciudad.id_for_label }}">Ciudad</label>
+                        {{ afectado_form.ciudad }}
+                        {% if afectado_form.ciudad.errors %}
+                            <p class="error-text">{{ afectado_form.ciudad.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="{{ afectado_form.sector.id_for_label }}">Sector</label>
+                    {{ afectado_form.sector }}
+                    {% if afectado_form.sector.errors %}
+                        <p class="error-text">{{ afectado_form.sector.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="input-group">
+                    <label for="{{ afectado_form.direccion_anterior.id_for_label }}">Dirección donde vivía antes del terremoto</label>
+                    {{ afectado_form.direccion_anterior }}
+                    {% if afectado_form.direccion_anterior.errors %}
+                        <p class="error-text">{{ afectado_form.direccion_anterior.errors|join:", " }}</p>
+                    {% endif %}
+                    <p class="help-text">Indica la dirección completa de tu vivienda anterior</p>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- =============== SECCIÓN 3: NÚCLEO FAMILIAR =============== -->
+            <!-- ============================================================ -->
+            <div class="card" style="border-top: 4px solid var(--color-venezuela-yellow);">
+                <h3 class="text-lg font-bold text-primary flex items-center gap-2 mb-4">
+                    <span class="w-6 h-6 rounded-full bg-secondary text-gray-900 flex items-center justify-center text-xs font-bold">3</span>
+                    Núcleo Familiar
+                </h3>
+                
+                <p class="text-sm text-gray-500 mb-4">Indica cómo está compuesto tu núcleo familiar que requiere ser acogido (incluyéndote a ti mismo)</p>
+                
+                <!-- Cantidad de niños -->
+                <div class="input-group">
+                    <label for="{{ afectado_form.cantidad_ninos.id_for_label }}">👶 Niños <span class="text-xs text-gray-400">(menor de 18 años)</span></label>
+                    {{ afectado_form.cantidad_ninos }}
+                    {% if afectado_form.cantidad_ninos.errors %}
+                        <p class="error-text">{{ afectado_form.cantidad_ninos.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Cantidad de adultos -->
+                <div class="input-group">
+                    <label for="{{ afectado_form.cantidad_adultos.id_for_label }}">👨 Adultos</label>
+                    {{ afectado_form.cantidad_adultos }}
+                    {% if afectado_form.cantidad_adultos.errors %}
+                        <p class="error-text">{{ afectado_form.cantidad_adultos.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Cantidad de adultos mayores -->
+                <div class="input-group">
+                    <label for="{{ afectado_form.cantidad_adultos_mayores.id_for_label }}">👴 Adultos mayores <span class="text-xs text-gray-400">(mayor de 65 años)</span></label>
+                    {{ afectado_form.cantidad_adultos_mayores }}
+                    {% if afectado_form.cantidad_adultos_mayores.errors %}
+                        <p class="error-text">{{ afectado_form.cantidad_adultos_mayores.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Mascotas -->
+                <div class="border-t border-gray-200 pt-4 mt-4">
+                    <label class="flex items-center gap-3 text-sm font-medium text-gray-700 cursor-pointer">
+                        {{ afectado_form.tiene_mascotas }}
+                        <span>¿Tiene mascotas?</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ==================== SECCIÓN 4: DOCUMENTACIÓN ==================== -->
+            <!-- ============================================================ -->
+            <div class="card" style="border-top: 4px solid var(--color-venezuela-red);">
+                <h3 class="text-lg font-bold text-primary flex items-center gap-2 mb-4">
+                    <span class="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold">4</span>
+                    Documentación
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label for="{{ afectado_form.cedula_file.id_for_label }}">Cédula (Imagen/PDF) *</label>
+                        {{ afectado_form.cedula_file }}
+                        {% if afectado_form.cedula_file.errors %}
+                            <p class="error-text">{{ afectado_form.cedula_file.errors|join:", " }}</p>
+                        {% endif %}
+                        <p class="help-text">Formatos: JPG, PNG, PDF (máx. 5MB)</p>
+                    </div>
+                    <div class="input-group">
+                        <label for="{{ afectado_form.residencia_file.id_for_label }}">Comprobante de situación *</label>
+                        {{ afectado_form.residencia_file }}
+                        {% if afectado_form.residencia_file.errors %}
+                            <p class="error-text">{{ afectado_form.residencia_file.errors|join:", " }}</p>
+                        {% endif %}
+                        <p class="help-text">Comprobante de residencia, foto del daño, registro de bomberos, etc. (JPG, PNG, PDF, máx. 5MB)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ✅ Botón de envío -->
+            <button type="submit" class="btn btn-primary btn-lg btn-block">
+                <span class="text-lg">✅</span> Completar Registro
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ✅ MODAL DE TÉRMINOS Y CONDICIONES -->
+<!-- ============================================================ -->
+<div id="modalTerminos" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]" style="display:flex;">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden mx-4">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200 flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">📋</div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Términos y Condiciones</h3>
+                    <p class="text-xs text-gray-500">Lee y acepta para continuar</p>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs">🔒</div>
+        </div>
+        
+        <div id="contenidoTerminos" class="flex-1 overflow-y-auto p-6 space-y-4 text-sm text-gray-700 leading-relaxed">
+            <h4 class="text-base font-bold text-primary">1. Aceptación de los Términos</h4>
+            <p>Al registrarte como afectado en VzlaUnida, aceptas cumplir con estos términos y condiciones. Si no estás de acuerdo, no podrás utilizar la plataforma.</p>
+            
+            <h4 class="text-base font-bold text-primary mt-4">2. Verificación de Identidad</h4>
+            <p>Para garantizar la seguridad de todos los usuarios, VzlaUnida requiere que todos los afectados verifiquen su identidad mediante la presentación de documentos válidos (cédula de identidad y comprobante de situación).</p>
+            
+            <h4 class="text-base font-bold text-primary mt-4">3. Protección de Datos</h4>
+            <p>VzlaUnida cumple con los lineamientos internacionales de protección de identidad para menores y personas en situación de vulnerabilidad.</p>
+            
+            <h4 class="text-base font-bold text-primary mt-4">4. Responsabilidades del Afectado</h4>
+            <ul class="list-disc pl-6 space-y-1">
+                <li>Proporcionar información veraz y actualizada.</li>
+                <li>Respetar las normas de convivencia en los hogares de acogida.</li>
+                <li>Notificar a VzlaUnida cualquier cambio en su situación.</li>
+                <li>Cumplir con las leyes y regulaciones locales aplicables.</li>
+            </ul>
+            
+            <h4 class="text-base font-bold text-primary mt-4">5. Verificación de Documentos</h4>
+            <p>Los documentos subidos serán verificados por el equipo de VzlaUnida. Este proceso puede tomar hasta 48 horas.</p>
+            
+            <h4 class="text-base font-bold text-primary mt-4">6. Conducta Prohibida</h4>
+            <ul class="list-disc pl-6 space-y-1">
+                <li>Publicar información falsa o engañosa.</li>
+                <li>Utilizar la plataforma para fines ilegales o no autorizados.</li>
+                <li>Acosar o intimidar a otros usuarios.</li>
+            </ul>
+            
+            <h4 class="text-base font-bold text-primary mt-4">7. Contacto</h4>
+            <div class="mt-2 p-3 bg-gray-50 rounded-lg">
+                <p class="text-sm">📸 Instagram: <a href="#" class="text-primary hover:underline">@Venezuelaunida</a></p>
+                <p class="text-sm">🎵 TikTok: <a href="#" class="text-primary hover:underline">@venezuelaunida</a></p>
+                <p class="text-sm">✉️ Email: <a href="mailto:info@vzlaunida.com" class="text-primary hover:underline">info@vzlaunida.com</a></p>
+            </div>
+            
+            <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-xs">
+                ⚠️ Al hacer scroll hasta el final de este documento, se habilitará el botón "Aceptar". 
+                Debes leer todos los términos antes de continuar.
+            </div>
+        </div>
+        
+        <div class="p-6 border-t border-gray-200 flex-shrink-0 bg-gray-50">
+            <button id="btnAceptarTerminos" 
+                    class="w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-bold cursor-not-allowed transition-all duration-300"
+                    disabled>
+                🔒 Desplázate hasta el final para aceptar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modalTerminos = document.getElementById('modalTerminos');
+    const btnAceptar = document.getElementById('btnAceptarTerminos');
+    const contenidoTerminos = document.getElementById('contenidoTerminos');
+    const formularioRegistro = document.getElementById('formularioRegistro');
+    
+    contenidoTerminos.addEventListener('scroll', function() {
+        const scrollTop = this.scrollTop;
+        const scrollHeight = this.scrollHeight;
+        const clientHeight = this.clientHeight;
+        
+        if (scrollTop + clientHeight >= scrollHeight - 10) {
+            btnAceptar.disabled = false;
+            btnAceptar.className = 'w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary-dark transition-all duration-300';
+            btnAceptar.innerHTML = '✅ Aceptar Términos y Condiciones';
+        }
+    });
+    
+    btnAceptar.addEventListener('click', function() {
+        if (!this.disabled) {
+            modalTerminos.style.display = 'none';
+            formularioRegistro.style.display = 'block';
+            localStorage.setItem('terminos_aceptados_afectado', 'true');
+        }
+    });
+    
+    if (localStorage.getItem('terminos_aceptados_afectado') === 'true') {
+        modalTerminos.style.display = 'none';
+        formularioRegistro.style.display = 'block';
+    }
+    
+    modalTerminos.addEventListener('click', function(e) {
+        if (e.target === this) {
+            // No hacer nada - el modal no se cierra
+        }
+    });
+});
+</script>
+
+<!-- ============================================================ -->
+<!-- ✅ SCRIPT DE CIUDADES Y CÉDULA -->
+<!-- ============================================================ -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const data = {{ ubicaciones_json|safe }};
+    const estadoSelect = document.querySelector('select[name="estado"]');
+    const ciudadSelect = document.querySelector('select[name="ciudad"]');
+
+    function actualizarCiudades(estadoSeleccionado) {
+        ciudadSelect.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Seleccione Ciudad';
+        ciudadSelect.appendChild(defaultOption);
+        
+        if (estadoSeleccionado && data[estadoSeleccionado]) {
+            data[estadoSeleccionado].forEach(ciudad => {
+                const option = document.createElement('option');
+                option.value = ciudad;
+                option.textContent = ciudad;
+                ciudadSelect.appendChild(option);
+            });
+        }
+    }
+
+    if (estadoSelect && ciudadSelect) {
+        estadoSelect.addEventListener('change', function() {
+            actualizarCiudades(this.value);
+        });
+
+        const estadoSeleccionado = estadoSelect.value;
+        if (estadoSeleccionado) {
+            actualizarCiudades(estadoSeleccionado);
+            const ciudadGuardada = "{{ afectado_form.ciudad.value|default:'' }}";
+            if (ciudadGuardada) {
+                ciudadSelect.value = ciudadGuardada;
+            }
+        }
+    }
+
+    // ✅ Formato de cédula
+    const cedulaInput = document.getElementById('id_numero_cedula_afectado');
+    if (cedulaInput) {
+        cedulaInput.addEventListener('input', function(e) {
+            let valor = this.value.replace(/\D/g, '');
+            if (valor.length > 8) {
+                valor = valor.slice(0, 8);
+            }
+            let formateado = '';
+            if (valor.length > 0) {
+                if (valor.length <= 2) {
+                    formateado = valor;
+                } else if (valor.length <= 5) {
+                    formateado = valor.slice(0, 2) + '.' + valor.slice(2);
+                } else {
+                    formateado = valor.slice(0, 2) + '.' + valor.slice(2, 5) + '.' + valor.slice(5);
+                }
+            }
+            this.value = formateado;
+        });
+    }
+});
+</script>
+{% endblock %}
