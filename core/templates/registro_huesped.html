@@ -297,12 +297,22 @@
             <button type="submit" class="btn btn-primary btn-lg btn-block">
                 <span class="text-lg">✅</span> Completar Registro
             </button>
+
+            <!-- ✅ Enlace a Términos y Condiciones -->
+            <div class="mt-4 text-center">
+                <p class="text-xs text-gray-400">
+                    Al registrarte, aceptas nuestros 
+                    <a href="#" onclick="abrirModalTerminos(); return false;" class="text-primary hover:underline font-medium">
+                        Términos y Condiciones
+                    </a>
+                </p>
+            </div>
         </form>
     </div>
 </div>
 
 <!-- ============================================================ -->
-<!-- ✅ MODAL DE TÉRMINOS Y CONDICIONES -->
+<!-- ✅ MODAL DE TÉRMINOS Y CONDICIONES (INICIAL) -->
 <!-- ============================================================ -->
 <div id="modalTerminos" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]" style="display:flex;">
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden mx-4">

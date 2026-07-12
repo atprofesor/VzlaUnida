@@ -204,6 +204,22 @@ class Huesped(models.Model):
     def get_estado_display(self):
         return dict(ESTADO_VERIFICACION_CHOICES).get(self.estado_verificacion, self.estado_verificacion)
     
+    def matches_recibidos(self):
+        """Retorna los matches donde este huésped ha sido contactado (por afectados)"""
+        return Match.objects.filter(huesped=self).select_related('afectado')
+
+    def matches_pendientes(self):
+        """Retorna los matches pendientes de este huésped"""
+        return self.matches_recibidos().filter(estado='pendiente')
+
+    def matches_aceptados(self):
+        """Retorna los matches aceptados de este huésped"""
+        return self.matches_recibidos().filter(estado='aceptado')
+
+    def matches_rechazados(self):
+        """Retorna los matches rechazados de este huésped"""
+        return self.matches_recibidos().filter(estado='rechazado')
+    
     def __str__(self):
         return f"{self.nombres} {self.apellidos} ({self.cedula_completa()})"
 
@@ -222,7 +238,6 @@ class Afectado(models.Model):
     sector = models.CharField(max_length=300, default='')
     direccion_anterior = models.TextField(default='', help_text="Dirección donde vivía antes del terremoto")
     
-    # Núcleo familiar
     cantidad_ninos = models.IntegerField(default=0, help_text="Cantidad de niños en el núcleo familiar (menor de 18 años)")
     cantidad_adultos = models.IntegerField(default=0, help_text="Cantidad de adultos en el núcleo familiar")
     cantidad_adultos_mayores = models.IntegerField(default=0, help_text="Cantidad de adultos mayores en el núcleo familiar (mayor a 65 años)")
@@ -268,5 +283,68 @@ class Afectado(models.Model):
     def get_estado_display(self):
         return dict(ESTADO_VERIFICACION_CHOICES).get(self.estado_verificacion, self.estado_verificacion)
     
+    def matches_recibidos(self):
+        """Retorna los matches donde este afectado ha sido contactado (por huéspedes)"""
+        return Match.objects.filter(afectado=self).select_related('huesped')
+
+    def matches_pendientes(self):
+        """Retorna los matches pendientes de este afectado"""
+        return self.matches_recibidos().filter(estado='pendiente')
+
+    def matches_aceptados(self):
+        """Retorna los matches aceptados de este afectado"""
+        return self.matches_recibidos().filter(estado='aceptado')
+    
     def __str__(self):
         return f"{self.nombres} {self.apellidos} ({self.cedula_completa()})"
+
+
+class Match(models.Model):
+    ESTADO_MATCH_CHOICES = [
+        ('pendiente', '⏳ Pendiente'),
+        ('aceptado', '✅ Aceptado'),
+        ('rechazado', '❌ Rechazado'),
+    ]
+    
+    huesped = models.ForeignKey(Huesped, on_delete=models.CASCADE, related_name='matches_enviados')
+    afectado = models.ForeignKey(Afectado, on_delete=models.CASCADE, related_name='matches_recibidos')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    estado = models.CharField(max_length=20, choices=ESTADO_MATCH_CHOICES, default='pendiente')
+    mensaje = models.TextField(blank=True, null=True, help_text="Mensaje opcional del huésped al afectado")
+    
+    # ✅ NUEVO CAMPO: Comentario para almacenar motivo de rechazo
+    comentario = models.TextField(blank=True, null=True, help_text="Comentario sobre el estado del match")
+    
+    coincide_capacidad = models.BooleanField(default=False)
+    coincide_mascotas = models.BooleanField(default=False)
+    porcentaje_compatibilidad = models.IntegerField(default=0)
+    
+    class Meta:
+        verbose_name = 'Match'
+        verbose_name_plural = 'Matches'
+        unique_together = ['huesped', 'afectado']
+    
+    def __str__(self):
+        return f"{self.huesped.nombres} ↔ {self.afectado.nombres} ({self.get_estado_display()})"
+    
+    def calcular_porcentaje(self):
+        """Calcula el porcentaje de compatibilidad entre huésped y afectado"""
+        puntos = 0
+        total = 2  # Capacidad + Mascotas
+        
+        # 1. Capacidad: huésped debe tener capacidad suficiente para el núcleo familiar
+        if self.huesped.cantidad_personas >= self.afectado.cantidad_total():
+            puntos += 1
+            self.coincide_capacidad = True
+        
+        # 2. Mascotas: coincidencia en mascotas
+        if self.huesped.acepta_mascotas == self.afectado.tiene_mascotas:
+            puntos += 1
+            self.coincide_mascotas = True
+        elif self.huesped.acepta_mascotas and not self.afectado.tiene_mascotas:
+            puntos += 1
+            self.coincide_mascotas = True
+        
+        self.porcentaje_compatibilidad = int((puntos / total) * 100)
+        return self.porcentaje_compatibilidad

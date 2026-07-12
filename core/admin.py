@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.utils.html import mark_safe
 from django.utils import timezone
 from django.contrib import messages
-from .models import Huesped, Afectado, ESTADO_VERIFICACION_CHOICES
+from .models import Huesped, Afectado, Match, ESTADO_VERIFICACION_CHOICES
 
 @admin.register(Huesped)
 class HuespedAdmin(admin.ModelAdmin):
@@ -531,3 +531,44 @@ class AfectadoAdmin(admin.ModelAdmin):
             path('revision/<int:pk>/', self.admin_site.admin_view(marcar_en_revision_afectado_direct), name='marcar_en_revision_afectado_direct'),
         ]
         return custom_urls + super().get_urls()
+
+
+# ✅ REGISTRO DEL MODELO MATCH
+@admin.register(Match)
+class MatchAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'huesped',
+        'afectado',
+        'porcentaje_compatibilidad',
+        'estado',
+        'fecha_creacion',
+    )
+    list_filter = ('estado', 'coincide_capacidad', 'coincide_mascotas', 'fecha_creacion')
+    search_fields = ('huesped__nombres', 'huesped__apellidos', 'afectado__nombres', 'afectado__apellidos')
+    readonly_fields = ('fecha_creacion', 'fecha_actualizacion')
+    ordering = ('-fecha_creacion',)
+    
+    fieldsets = (
+        ('Información del Match', {
+            'fields': (
+                'huesped',
+                'afectado',
+                'estado',
+                'mensaje',
+            )
+        }),
+        ('Compatibilidad', {
+            'fields': (
+                'coincide_capacidad',
+                'coincide_mascotas',
+                'porcentaje_compatibilidad',
+            )
+        }),
+        ('Fechas', {
+            'fields': (
+                'fecha_creacion',
+                'fecha_actualizacion',
+            )
+        }),
+    )

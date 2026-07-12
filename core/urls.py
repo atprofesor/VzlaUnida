@@ -19,6 +19,10 @@ from .views import (
     rechazar_afectado,
     solicitar_correccion_afectado,
     marcar_en_revision_afectado,
+    ver_detalle_afectado,
+    contactar_afectado,
+    responder_match,
+    declinar_match,  # ✅ NUEVA IMPORTACIÓN
 )
 
 urlpatterns = [
@@ -32,6 +36,12 @@ urlpatterns = [
     path('perfil/afectado/', perfil_afectado, name='perfil_afectado'),
     path('buscar-afectados/', buscar_afectados, name='buscar_afectados'),
     path('buscar-huespedes/', buscar_huespedes, name='buscar_huespedes'),
+    
+    # ✅ RUTAS DE MATCHES
+    path('detalle/afectado/<int:pk>/', ver_detalle_afectado, name='detalle_afectado'),
+    path('contactar/afectado/<int:pk>/', contactar_afectado, name='contactar_afectado'),
+    path('responder/match/<int:match_id>/', responder_match, name='responder_match'),
+    path('declinar/match/<int:match_id>/', declinar_match, name='declinar_match'),  # ✅ NUEVA RUTA
     
     # Login y Logout
     path('login/', login_view, name='login'),

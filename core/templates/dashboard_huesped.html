@@ -42,7 +42,7 @@
                 <p class="text-gray-400 text-sm truncate">📍 {{ huesped.sector|default:"-" }}</p>
             </div>
             
-            <!-- ✅ Columna 3: Capacidad (NUEVA VERSIÓN) -->
+            <!-- Columna 3: Capacidad -->
             <div>
                 <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Capacidad</p>
                 <p class="font-bold text-primary text-lg">{{ capacidad_total }} <span class="font-normal text-gray-500 text-sm">personas</span></p>
@@ -60,8 +60,6 @@
                         <span class="text-gray-400 text-[10px]">No especifica grupos</span>
                     {% endif %}
                 </div>
-
-                <!-- Mascotas -->
                 <div class="flex gap-1 mt-1">
                     {% if huesped.acepta_mascotas %}
                         <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">🐕 Acepta mascotas</span>
@@ -69,10 +67,9 @@
                         <span class="text-[10px] text-gray-400">No acepta mascotas</span>
                     {% endif %}
                 </div>
-
             </div>
             
-            <!-- Columna 4: Estado (con mensaje incluido) -->
+            <!-- Columna 4: Estado -->
             <div>
                 <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Estado</p>
                 <span class="badge {% if huesped.estado_verificacion == 'aprobado' %}badge-success{% elif huesped.estado_verificacion == 'rechazado' %}badge-danger{% elif huesped.estado_verificacion == 'en_revision' %}badge-info{% elif huesped.estado_verificacion == 'requiere_correccion' %}badge-warning{% else %}badge-secondary{% endif %} text-sm mb-1 inline-block">
@@ -109,7 +106,27 @@
         </div>
     </div>
 
-    <!-- ✅ SECCIÓN INTERMEDIA: ESTADÍSTICAS + AFECTADOS + HUÉSPEDES -->
+    <!-- ✅ SECCIÓN: MATCH ACTIVO -->
+    {% if tiene_match_activo %}
+        <div class="card p-3 bg-green-50 border-green-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-green-700">✅ Tienes un match activo</p>
+                    <p class="text-xs text-gray-600">Has aceptado un afectado. Ya no puedes ver otros perfiles.</p>
+                </div>
+                {% for match in matches_aceptados %}
+                    <form method="post" action="{% url 'declinar_match' match.id %}" class="inline" onsubmit="return confirm('¿Estás seguro de que deseas declinar este match? Esta acción no se puede deshacer.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            🔄 Declinar Match
+                        </button>
+                    </form>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- ✅ SECCIÓN INTERMEDIA: ESTADÍSTICAS + COMPATIBLES + HUÉSPEDES -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1">
         <!-- Columna 1: Estadísticas rápidas -->
         <div class="card p-3 flex flex-col justify-between">
@@ -124,8 +141,8 @@
                     <span class="text-sm font-bold text-primary">{{ total_afectados_ciudad }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-xs text-gray-600">Huéspedes cercanos</span>
-                    <span class="text-sm font-bold text-primary">{{ otros_huespedes|length }}</span>
+                    <span class="text-xs text-gray-600">Afec. compatibles</span>
+                    <span class="text-sm font-bold text-primary">{{ afectados_compatibles|length }}</span>
                 </div>
             </div>
             <div class="mt-1.5 pt-1.5 border-t border-gray-100">
@@ -133,32 +150,61 @@
             </div>
         </div>
 
-        <!-- Columna 2: Afectados cercanos -->
+        <!-- ✅ Columna 2: AFECTADOS COMPATIBLES -->
         <div class="card p-3 flex flex-col">
             <div class="flex items-center justify-between mb-1.5">
-                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">🆘 Afectados cercanos</p>
-                <span class="badge badge-info text-[10px]">{{ afectados_cercanos|length }}</span>
+                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">🎯 Afectados compatibles</p>
+                <span class="badge {% if tiene_match_activo %}badge-secondary{% else %}badge-info{% endif %} text-[10px]">
+                    {% if tiene_match_activo %}0{% else %}{{ afectados_compatibles|length }}{% endif %}
+                </span>
             </div>
             
-            {% if huesped.estado_verificacion == 'aprobado' %}
-                {% if afectados_cercanos %}
+            {% if tiene_match_activo %}
+                <div class="flex-1 flex items-center justify-center">
+                    <p class="text-xs text-gray-400 text-center">🔒 Ya tienes un match activo</p>
+                </div>
+            {% elif huesped.estado_verificacion == 'aprobado' %}
+                {% if afectados_compatibles %}
                     <div class="flex-1 overflow-y-auto max-h-[80px] space-y-1 pr-1">
-                        {% for afectado in afectados_cercanos|slice:":4" %}
-                            <div class="flex items-center justify-between bg-gray-50 rounded px-2 py-1">
-                                <div>
-                                    <p class="text-xs font-medium text-gray-800">{{ afectado.nombre_completo }}</p>
-                                    <p class="text-[10px] text-gray-500">📍 {{ afectado.ciudad }}</p>
+                        {% for item in afectados_compatibles|slice:":4" %}
+                            <div class="flex items-center justify-between bg-gray-50 rounded px-2 py-1 hover:bg-gray-100 transition">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-medium text-gray-800 truncate">{{ item.afectado.nombres }} {{ item.afectado.apellidos }}</p>
+                                    <p class="text-[10px] text-gray-500">📍 {{ item.afectado.ciudad }}</p>
+                                    <div class="flex gap-1 mt-0.5">
+                                        {% if item.coincide_capacidad %}
+                                            <span class="text-[8px] bg-green-100 text-green-700 px-1 py-0.5 rounded">✅ Capacidad</span>
+                                        {% endif %}
+                                        {% if item.coincide_mascotas %}
+                                            <span class="text-[8px] bg-green-100 text-green-700 px-1 py-0.5 rounded">✅ Mascotas</span>
+                                        {% endif %}
+                                        <span class="text-[8px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded">{{ item.porcentaje }}% match</span>
+                                        {% if item.estado == 'pendiente' %}
+                                            <span class="text-[8px] bg-yellow-100 text-yellow-700 px-1 py-0.5 rounded">⏳ Enviado</span>
+                                        {% endif %}
+                                        {% if item.estado == 'rechazado_por_otro' %}
+                                            <span class="text-[8px] bg-red-100 text-red-700 px-1 py-0.5 rounded">❌ Ocupado</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                <a href="#" class="text-[10px] bg-primary text-white px-2 py-0.5 rounded hover:bg-primary-dark transition">Contactar</a>
+                                {% if item.estado == 'pendiente' %}
+                                    <span class="text-[10px] text-gray-400 flex-shrink-0 ml-1">⏳ Esperando</span>
+                                {% elif item.estado == 'rechazado_por_otro' %}
+                                    <span class="text-[10px] text-red-400 flex-shrink-0 ml-1">❌ Ocupado</span>
+                                {% else %}
+                                    <a href="{% url 'detalle_afectado' item.afectado.id %}" class="text-[10px] bg-primary text-white px-2 py-0.5 rounded hover:bg-primary-dark transition flex-shrink-0 ml-1">
+                                        Ver más
+                                    </a>
+                                {% endif %}
                             </div>
                         {% endfor %}
-                        {% if afectados_cercanos|length > 4 %}
-                            <p class="text-[10px] text-gray-400 text-center">+{{ afectados_cercanos|length|add:"-4" }} más</p>
+                        {% if afectados_compatibles|length > 4 %}
+                            <p class="text-[10px] text-gray-400 text-center">+{{ afectados_compatibles|length|add:"-4" }} más</p>
                         {% endif %}
                     </div>
                 {% else %}
                     <div class="flex-1 flex items-center justify-center">
-                        <p class="text-xs text-gray-400 text-center">No hay afectados cercanos</p>
+                        <p class="text-xs text-gray-400 text-center">No hay afectados que cumplan tus condiciones</p>
                     </div>
                 {% endif %}
             {% else %}
@@ -203,6 +249,99 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- ✅ SECCIÓN: SOLICITUDES DE CONTACTO ENVIADAS (PENDIENTES Y RECHAZADAS) -->
+    <div class="card p-3">
+        <div class="flex items-center justify-between mb-2">
+            <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">📩 Solicitudes de contacto enviadas</p>
+            <span class="badge badge-warning text-[10px]">{{ matches_pendientes|length }}</span>
+        </div>
+        
+        <!-- Matches Pendientes -->
+        {% if matches_pendientes %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                {% for match in matches_pendientes|slice:":6" %}
+                    <div class="flex items-center justify-between bg-gray-50 rounded px-2 py-1.5">
+                        <div>
+                            <p class="text-xs font-medium text-gray-800">{{ match.afectado.nombres }} {{ match.afectado.apellidos }}</p>
+                            <p class="text-[10px] text-gray-500">📍 {{ match.afectado.ciudad }}</p>
+                            <p class="text-[10px] text-yellow-600">⏳ Esperando respuesta</p>
+                        </div>
+                        <span class="badge badge-secondary text-[10px]">{{ match.porcentaje_compatibilidad }}%</span>
+                    </div>
+                {% endfor %}
+                {% if matches_pendientes|length > 6 %}
+                    <p class="text-[10px] text-gray-400 text-center col-span-full">+{{ matches_pendientes|length|add:"-6" }} más</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <p class="text-sm text-gray-400 text-center py-2">No tienes solicitudes pendientes</p>
+        {% endif %}
+        
+        <!-- ✅ Matches Rechazados -->
+        {% if matches_rechazados %}
+            <div class="border-t border-gray-200 pt-3 mt-2">
+                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-2">❌ Solicitudes canceladas</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {% for match in matches_rechazados|slice:":6" %}
+                        <div class="flex items-center justify-between bg-red-50 rounded px-2 py-1.5 border border-red-200">
+                            <div>
+                                <p class="text-xs font-medium text-gray-800">{{ match.afectado.nombres }} {{ match.afectado.apellidos }}</p>
+                                <p class="text-[10px] text-gray-500">📍 {{ match.afectado.ciudad }}</p>
+                                <p class="text-[10px] text-red-600">
+                                    ❌ {{ match.comentario|default:"Solicitud cancelada" }}
+                                </p>
+                            </div>
+                            <span class="badge badge-secondary text-[10px]">{{ match.porcentaje_compatibilidad }}%</span>
+                        </div>
+                    {% endfor %}
+                    {% if matches_rechazados|length > 6 %}
+                        <p class="text-[10px] text-gray-400 text-center col-span-full">+{{ matches_rechazados|length|add:"-6" }} más</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ✅ SECCIÓN: MATCHES ACEPTADOS -->
+    {% if matches_aceptados %}
+        <div class="card p-3">
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">✅ Matches aceptados</p>
+                <span class="badge badge-success text-[10px]">{{ matches_aceptados|length }}</span>
+            </div>
+            <div class="space-y-2">
+                {% for match in matches_aceptados %}
+                    <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                            <div>
+                                <p class="text-sm font-bold text-gray-800">{{ match.afectado.nombres }} {{ match.afectado.apellidos }}</p>
+                                <p class="text-xs text-gray-500">📍 {{ match.afectado.ciudad }}, {{ match.afectado.estado }}</p>
+                                <p class="text-xs text-gray-500">👨‍👩‍👧‍👦 Núcleo familiar: {{ match.afectado.cantidad_total }} personas</p>
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    <span class="badge badge-success text-[10px]">✅ Match aceptado</span>
+                                    <span class="badge badge-info text-[10px]">{{ match.afectado.telefono }}</span>
+                                    <span class="badge badge-secondary text-[10px]">{{ match.porcentaje_compatibilidad }}%</span>
+                                </div>
+                                <p class="text-[10px] text-green-600 mt-1">📱 Teléfono visible - Ambos pueden contactarse</p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                                <a href="mailto:{{ match.afectado.user.email }}" class="btn btn-primary btn-sm w-full">
+                                    ✉️ Enviar Email
+                                </a>
+                                <form method="post" action="{% url 'declinar_match' match.id %}" class="inline" onsubmit="return confirm('¿Estás seguro de que deseas declinar este match? Esta acción no se puede deshacer.');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm w-full">
+                                        🔄 Declinar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
 
     <!-- ✅ BANNER INFERIOR DE LA BANDERA -->
     <div class="w-full" style="background: linear-gradient(90deg, #FFD100 0%, #FFD100 33%, #001F5C 33%, #001F5C 66%, #CF202F 66%, #CF202F 100%); height: 6px; border-radius: 3px;"></div>

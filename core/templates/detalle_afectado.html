@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- ✅ Encabezado -->
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <h2 class="text-2xl font-extrabold text-primary flex items-center gap-2">
+                <span class="text-3xl">👤</span> Detalle del Afectado
+            </h2>
+            <p class="text-gray-500 text-sm mt-1">Información completa del núcleo familiar</p>
+        </div>
+        <a href="{% url 'dashboard_huesped' %}" class="btn btn-outline btn-sm">
+            ← Volver
+        </a>
+    </div>
+
+    <!-- ✅ Mensajes -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} mb-4">
+                <span class="alert-icon">
+                    {% if message.tags == 'error' %}❌
+                    {% elif message.tags == 'success' %}✅
+                    {% elif message.tags == 'warning' %}⚠️
+                    {% else %}ℹ️{% endif %}
+                </span>
+                <div class="alert-content">
+                    <p>{{ message }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- ✅ TARJETA DE INFORMACIÓN -->
+    <div class="card p-6">
+        <!-- Información de compatibilidad -->
+        {% if match %}
+            <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <p class="text-sm font-medium text-gray-700">🧩 Compatibilidad</p>
+                        <div class="flex items-center gap-4 mt-1">
+                            <span class="text-2xl font-bold text-primary">{{ match.porcentaje_compatibilidad }}%</span>
+                            <div class="flex gap-2">
+                                {% if match.coincide_capacidad %}
+                                    <span class="badge badge-success text-xs">✅ Capacidad</span>
+                                {% endif %}
+                                {% if match.coincide_mascotas %}
+                                    <span class="badge badge-success text-xs">✅ Mascotas</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge {% if match.estado == 'pendiente' %}badge-warning{% elif match.estado == 'aceptado' %}badge-success{% else %}badge-danger{% endif %} text-sm">
+                            {% if match.estado == 'pendiente' %}⏳ Pendiente
+                            {% elif match.estado == 'aceptado' %}✅ Aceptado
+                            {% else %}❌ Rechazado{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% if mensaje_match %}
+                    <p class="text-sm font-medium mt-2 {% if match.estado == 'aceptado' %}text-green-600{% elif match.estado == 'pendiente' %}text-yellow-600{% else %}text-red-600{% endif %}">
+                        {{ mensaje_match }}
+                    </p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Información personal -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Datos Personales</h3>
+                <div class="space-y-2">
+                    <div>
+                        <p class="text-xs text-gray-400">Nombre completo</p>
+                        <p class="font-medium text-gray-800">{{ afectado.nombres }} {{ afectado.apellidos }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400">Cédula</p>
+                        <p class="font-medium text-gray-800">{{ afectado.cedula_completa }}</p>
+                    </div>
+                    {% if telefono_visible %}
+                        <div>
+                            <p class="text-xs text-gray-400">📱 Teléfono</p>
+                            <p class="font-medium text-green-600">{{ afectado.telefono }}</p>
+                            <p class="text-[10px] text-gray-400">✅ Visible por match aceptado</p>
+                        </div>
+                    {% else %}
+                        <div>
+                            <p class="text-xs text-gray-400">📱 Teléfono</p>
+                            <p class="font-medium text-gray-400">🔒 Oculto hasta que el afectado acepte</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Ubicación</h3>
+                <div class="space-y-2">
+                    <div>
+                        <p class="text-xs text-gray-400">📍 Ciudad</p>
+                        <p class="font-medium text-gray-800">{{ afectado.ciudad }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400">📍 Estado</p>
+                        <p class="font-medium text-gray-800">{{ afectado.estado }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400">📍 Sector</p>
+                        <p class="font-medium text-gray-800">{{ afectado.sector|default:"-" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400">🏠 Dirección anterior</p>
+                        <p class="font-medium text-gray-800">{{ afectado.direccion_anterior|default:"-" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Núcleo Familiar -->
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">👨‍👩‍👧‍👦 Núcleo Familiar</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <p class="text-2xl font-bold text-blue-600">{{ afectado.cantidad_ninos }}</p>
+                    <p class="text-xs text-gray-500">👶 Niños</p>
+                    <p class="text-[10px] text-gray-400">(menor de 18 años)</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <p class="text-2xl font-bold text-green-600">{{ afectado.cantidad_adultos }}</p>
+                    <p class="text-xs text-gray-500">👨 Adultos</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <p class="text-2xl font-bold text-purple-600">{{ afectado.cantidad_adultos_mayores }}</p>
+                    <p class="text-xs text-gray-500">👴 Adultos mayores</p>
+                    <p class="text-[10px] text-gray-400">(mayor de 65 años)</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <p class="text-2xl font-bold {% if afectado.tiene_mascotas %}text-green-600{% else %}text-gray-400{% endif %}">
+                        {% if afectado.tiene_mascotas %}🐕 Sí{% else %}❌ No{% endif %}
+                    </p>
+                    <p class="text-xs text-gray-500">Tiene mascotas</p>
+                </div>
+            </div>
+            <div class="mt-3 text-center">
+                <p class="text-sm text-gray-600">
+                    Total personas en el núcleo familiar: <strong class="text-primary">{{ afectado.cantidad_total }}</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- ✅ DOCUMENTOS - SIEMPRE VISIBLES PARA EL HUÉSPED (ANTES DE ACEPTAR) -->
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">📄 Documentos</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Cédula</p>
+                    <a href="{{ afectado.cedula_file.url }}" target="_blank" 
+                       class="btn btn-primary btn-sm w-full text-center">
+                        📄 Ver Cédula
+                    </a>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Comprobante de situación</p>
+                    <a href="{{ afectado.residencia_file.url }}" target="_blank" 
+                       class="btn btn-primary btn-sm w-full text-center">
+                        📄 Ver Comprobante
+                    </a>
+                </div>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-2 text-center">📋 Revisa los documentos del afectado antes de contactarlo</p>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="mt-6 pt-6 border-t border-gray-200 flex flex-col sm:flex-row gap-3">
+            {% if match.estado == 'pendiente' %}
+                <div class="w-full sm:w-auto">
+                    <button class="btn btn-secondary w-full" disabled>
+                        ⏳ Solicitud enviada - Esperando respuesta
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 text-center sm:text-left">
+                    El afectado recibió tu solicitud y está evaluando tu perfil.
+                </p>
+            {% elif match.estado == 'aceptado' %}
+                <div class="w-full sm:w-auto">
+                    <button class="btn btn-success w-full" disabled>
+                        ✅ Match aceptado - Teléfono visible
+                    </button>
+                </div>
+                <p class="text-xs text-green-600 text-center sm:text-left">
+                    ¡Excelente! Ambos pueden ver sus números de teléfono.
+                </p>
+            {% elif match.estado == 'rechazado' %}
+                <div class="w-full sm:w-auto">
+                    <button class="btn btn-danger w-full" disabled>
+                        ❌ Solicitud rechazada
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 text-center sm:text-left">
+                    El afectado rechazó tu solicitud. Puedes buscar otros afectados compatibles.
+                </p>
+            {% else %}
+                <form method="post" action="{% url 'contactar_afectado' afectado.id %}" class="w-full sm:w-auto">
+                    {% csrf_token %}
+                    <div class="space-y-2">
+                        <textarea name="mensaje" rows="2" 
+                                  class="w-full p-2 border rounded-lg bg-slate-50 text-sm"
+                                  placeholder="Escribe un mensaje para el afectado (opcional)"></textarea>
+                        <button type="submit" class="btn btn-primary w-full">
+                            📩 Contactar
+                        </button>
+                        <p class="text-[10px] text-gray-400 text-center">
+                            Al contactar, el afectado recibirá una notificación y podrá aceptar o rechazar.
+                        </p>
+                    </div>
+                </form>
+            {% endif %}
+            
+            <a href="{% url 'dashboard_huesped' %}" class="btn btn-outline w-full sm:w-auto">
+                ← Volver al Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
